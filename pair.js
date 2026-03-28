@@ -1,183 +1,106 @@
-import express from 'express';
-import fs from 'fs';
-import pino from 'pino';
-import { makeWASocket, useMultiFileAuthState, delay, makeCacheableSignalKeyStore, Browsers, jidNormalizedUser, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
-import pn from 'awesome-phonenumber';
+const PastebinAPI = require('pastebin-js'),
+pastebin = new PastebinAPI('EMWTMkQAVfJa9kM-MRUrxd5Oku1U7pgL')
+const {makeid} = require('./id');
+const express = require('express');
+const fs = require('fs');
+let router = express.Router()
+const pino = require("pino");
+const {
+    default: ZUKO_MD_Client,
+    useMultiFileAuthState,
+    delay,
+    makeCacheableSignalKeyStore,
+    Browsers
+} = require("@whiskeysockets/baileys");
 
-const router = express.Router();
-
-// Ensure the session directory exists
-function removeFile(FilePath) {
-    try {
-        if (!fs.existsSync(FilePath)) return false;
-        fs.rmSync(FilePath, { recursive: true, force: true });
-    } catch (e) {
-        console.error('Error removing file:', e);
-    }
-}
+function removeFile(FilePath){
+    if(!fs.existsSync(FilePath)) return false;
+    fs.rmSync(FilePath, { recursive: true, force: true })
+};
 
 router.get('/', async (req, res) => {
+    const id = makeid();
     let num = req.query.number;
-    let dirs = './' + (num || `session`);
+    let pairingCodeSent = false;
 
-    // Remove existing session if present
-    await removeFile(dirs);
-
-    // Clean the phone number - remove any non-digit characters
-    num = num.replace(/[^0-9]/g, '');
-
-    // Validate the phone number using awesome-phonenumber
-    const phone = pn('+' + num);
-    if (!phone.isValid()) {
-        if (!res.headersSent) {
-            return res.status(400).send({ code: 'Invalid phone number. Please enter your full international number (e.g., 15551234567 for US, 447911123456 for UK, 84987654321 for Vietnam, etc.) without + or spaces.' });
-        }
-        return;
-    }
-    // Use the international number format (E.164, without '+')
-    num = phone.getNumber('e164').replace('+', '');
-
-    async function initiateSession() {
-        const { state, saveCreds } = await useMultiFileAuthState(dirs);
-
+    async function ZUKO_MD_PAIR_CODE() {
+        const { state, saveCreds } = await useMultiFileAuthState('./temp/' + id);
         try {
-            const { version, isLatest } = await fetchLatestBaileysVersion();
-            let KnightBot = makeWASocket({
-                version,
+            let Pair_Code_By_ZUKO = ZUKO_MD_Client({
+                version: (await (await fetch('https://raw.githubusercontent.com/WhiskeySockets/Baileys/master/src/Defaults/baileys-version.json')).json()).version,
                 auth: {
                     creds: state.creds,
                     keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
                 },
                 printQRInTerminal: false,
                 logger: pino({ level: "fatal" }).child({ level: "fatal" }),
-                browser: Browsers.windows('Chrome'),
-                markOnlineOnConnect: false,
-                generateHighQualityLinkPreview: false,
-                defaultQueryTimeoutMs: 60000,
-                connectTimeoutMs: 60000,
-                keepAliveIntervalMs: 30000,
-                retryRequestDelayMs: 250,
-                maxRetries: 5,
+                browser: Browsers("Chrome"),
             });
 
-            KnightBot.ev.on('connection.update', async (update) => {
-                const { connection, lastDisconnect, isNewLogin, isOnline } = update;
+            Pair_Code_By_ZUKO.ev.on('creds.update', saveCreds);
 
-                if (connection === 'open') {
-                    console.log("✅ Connected successfully!");
-                    console.log("📱 Sending session file to user...");
-                    
+            Pair_Code_By_ZUKO.ev.on("connection.update", async (s) => {
+                const { connection, lastDisconnect, qr } = s;
+
+                if (qr && !pairingCodeSent && !Pair_Code_By_ZUKO.authState.creds.registered) {
+                    pairingCodeSent = true;
                     try {
-                        const sessionKnight = fs.readFileSync(dirs + '/creds.json');
-
-                        // Send session file to user
-                        const userJid = jidNormalizedUser(num + '@s.whatsapp.net');
-                        await KnightBot.sendMessage(userJid, {
-                            document: sessionKnight,
-                            mimetype: 'application/json',
-                            fileName: 'creds.json'
-                        });
-                        console.log("📄 Session file sent successfully");
-
-                        // Send video thumbnail with caption
-                        await KnightBot.sendMessage(userJid, {
-                            image: { url: 'https://img.youtube.com/vi/-oz_u1iMgf8/maxresdefault.jpg' },
-                            caption: `🎬 *KnightBot MD V2.0 Full Setup Guide!*\n\n🚀 Bug Fixes + New Commands + Fast AI Chat\n📺 Watch Now: https://youtu.be/NjOipI2AoMk`
-                        });
-                        console.log("🎬 Video guide sent successfully");
-
-                        // Send warning message
-                        await KnightBot.sendMessage(userJid, {
-                            text: `⚠️Do not share this file with anybody⚠️\n 
-┌┤✑  Thanks for using Knight Bot
-│└────────────┈ ⳹        
-│©2025 Mr Unique Hacker 
-└─────────────────┈ ⳹\n\n`
-                        });
-                        console.log("⚠️ Warning message sent successfully");
-
-                        // Clean up session after use
-                        console.log("🧹 Cleaning up session...");
-                        await delay(1000);
-                        removeFile(dirs);
-                        console.log("✅ Session cleaned up successfully");
-                        console.log("🎉 Process completed successfully!");
-                        // Do not exit the process, just finish gracefully
-                    } catch (error) {
-                        console.error("❌ Error sending messages:", error);
-                        // Still clean up session even if sending fails
-                        removeFile(dirs);
-                        // Do not exit the process, just finish gracefully
+                        await delay(1500);
+                        num = num.replace(/[^0-9]/g, '');
+                        const code = await Pair_Code_By_ZUKO.requestPairingCode(num);
+                        if (!res.headersSent) await res.send({ code });
+                    } catch (e) {
+                        console.log("Pairing code error:", e.message);
+                        if (!res.headersSent) await res.send({ code: "Service is Currently Unavailable" });
                     }
                 }
 
-                if (isNewLogin) {
-                    console.log("🔐 New login via pair code");
-                }
+                if (connection == "open") {
+                    await delay(50000);
+                    let data = fs.readFileSync(__dirname + `/temp/${id}/creds.json`);
+                    await delay(8000);
+                    let b64data = Buffer.from(data).toString('base64');
+                    let session = await Pair_Code_By_ZUKO.sendMessage(Pair_Code_By_ZUKO.user.id, { text: '' + b64data });
 
-                if (isOnline) {
-                    console.log("📶 Client is online");
-                }
+                    // Simple clean output message
+                    let ZUKO_MD_TEXT = `
+╔══════════════════════════════════════╗
+║           🔥 ZUKO-MD 🔥              ║
+║      Pairing Successfully Done!       ║
+╠══════════════════════════════════════╣
+║  ✅ Session saved successfully        ║
+║  📱 Number: +${num}                   ║
+║  🤖 Bot is now connected              ║
+╠══════════════════════════════════════╣
+║  📂 GitHub: Neggy5/ZUKO-MD           ║
+║  💬 Group: https://chat.whatsapp.com/DdZI3H1EFeOJs9TCIyVyXa?mode=gi_t   ║
+║  👤 Owner: wa.me/2349079055953    ║
+╠══════════════════════════════════════╣
+║  ✨ Thanks for using ZUKO-MD! ✨      ║
+╚══════════════════════════════════════╝
+`;
 
-                if (connection === 'close') {
-                    const statusCode = lastDisconnect?.error?.output?.statusCode;
+                    await Pair_Code_By_ZUKO.sendMessage(Pair_Code_By_ZUKO.user.id, { text: ZUKO_MD_TEXT }, { quoted: session });
 
-                    if (statusCode === 401) {
-                        console.log("❌ Logged out from WhatsApp. Need to generate new pair code.");
-                    } else {
-                        console.log("🔁 Connection closed — restarting...");
-                        initiateSession();
-                    }
+                    await delay(100);
+                    await Pair_Code_By_ZUKO.ws.close();
+                    return await removeFile('./temp/' + id);
+
+                } else if (connection === "close" && lastDisconnect?.error?.output?.statusCode != 401) {
+                    await delay(10000);
+                    ZUKO_MD_PAIR_CODE();
                 }
             });
 
-            if (!KnightBot.authState.creds.registered) {
-                await delay(3000); // Wait 3 seconds before requesting pairing code
-                num = num.replace(/[^\d+]/g, '');
-                if (num.startsWith('+')) num = num.substring(1);
-
-                try {
-                    let code = await KnightBot.requestPairingCode(num);
-                    code = code?.match(/.{1,4}/g)?.join('-') || code;
-                    if (!res.headersSent) {
-                        console.log({ num, code });
-                        await res.send({ code });
-                    }
-                } catch (error) {
-                    console.error('Error requesting pairing code:', error);
-                    if (!res.headersSent) {
-                        res.status(503).send({ code: 'Failed to get pairing code. Please check your phone number and try again.' });
-                    }
-                }
-            }
-
-            KnightBot.ev.on('creds.update', saveCreds);
         } catch (err) {
-            console.error('Error initializing session:', err);
+            console.log("service restarted");
+            await removeFile('./temp/' + id);
             if (!res.headersSent) {
-                res.status(503).send({ code: 'Service Unavailable' });
+                await res.send({ code: "Service is Currently Unavailable" });
             }
         }
     }
-
-    await initiateSession();
+    return await ZUKO_MD_PAIR_CODE();
 });
 
-// Global uncaught exception handler
-process.on('uncaughtException', (err) => {
-    let e = String(err);
-    if (e.includes("conflict")) return;
-    if (e.includes("not-authorized")) return;
-    if (e.includes("Socket connection timeout")) return;
-    if (e.includes("rate-overlimit")) return;
-    if (e.includes("Connection Closed")) return;
-    if (e.includes("Timed Out")) return;
-    if (e.includes("Value not found")) return;
-    if (e.includes("Stream Errored")) return;
-    if (e.includes("Stream Errored (restart required)")) return;
-    if (e.includes("statusCode: 515")) return;
-    if (e.includes("statusCode: 503")) return;
-    console.log('Caught exception: ', err);
-});
-
-export default router;
+module.exports = router;
