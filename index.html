@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ZUKO-MD | Pair & Deploy</title>
-  <meta name="description" content="ZUKO-MD — Advanced WhatsApp bot with pairing, deploy to Heroku, and community support.">
   <style>
     * {
       margin: 0;
@@ -15,340 +14,103 @@
     body {
       min-height: 100vh;
       background: radial-gradient(circle at 20% 30%, #0a0f1a, #03060c);
-      font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, 'Roboto', sans-serif;
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 2rem 1rem;
-      position: relative;
+      padding: 2rem;
     }
 
-    /* dark animated grain overlay */
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJmIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iLjciIG51bU9jdGF2ZXM9IjMiLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjZikiIG9wYWNpdHk9IjAuMDYiLz48L3N2Zz4=');
-      background-repeat: repeat;
-      opacity: 0.25;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    /* glowing card container */
     .glass-container {
-      max-width: 1200px;
+      max-width: 800px;
       width: 100%;
-      background: rgba(8, 12, 22, 0.68);
+      background: rgba(8, 12, 22, 0.75);
       backdrop-filter: blur(14px);
-      border-radius: 3rem;
-      border: 1px solid rgba(80, 180, 220, 0.25);
-      box-shadow: 0 25px 45px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(0, 255, 255, 0.1) inset;
-      padding: 2rem 2rem 2.8rem;
-      transition: all 0.3s ease;
-      z-index: 2;
-    }
-
-    /* header section with fire/lightning accent */
-    .hero {
+      border-radius: 2rem;
+      border: 1px solid rgba(0, 255, 255, 0.25);
+      padding: 2.5rem;
       text-align: center;
-      margin-bottom: 2.5rem;
-    }
-
-    .badge {
-      display: inline-block;
-      background: rgba(0, 210, 200, 0.15);
-      backdrop-filter: blur(4px);
-      padding: 0.3rem 1rem;
-      border-radius: 60px;
-      font-size: 0.75rem;
-      font-weight: 500;
-      letter-spacing: 1px;
-      color: #7df9ff;
-      border: 0.5px solid #2cffea30;
-      margin-bottom: 1.2rem;
     }
 
     h1 {
-      font-size: 3.2rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, #E0F2FE, #5EE6FF, #A259FF);
+      font-size: 3rem;
+      background: linear-gradient(135deg, #E0F2FE, #5EE6FF);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      text-shadow: 0 2px 5px rgba(0, 200, 255, 0.2);
-      letter-spacing: -0.02em;
-      margin-bottom: 0.5rem;
+      margin-bottom: 1rem;
     }
 
     .sub {
       color: #9aaec5;
-      font-size: 1rem;
-      font-weight: 400;
-      border-top: 1px dashed #2c5366;
-      display: inline-block;
-      padding-top: 0.5rem;
+      margin-bottom: 2rem;
     }
 
-    /* button grid - modern dark theme */
     .button-grid {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 1.25rem;
-      margin: 2.5rem 0 2rem;
+      gap: 1rem;
+      margin: 2rem 0;
     }
 
-    /* neomorphic dark button style */
     .btn {
-      --glow: #0ff3;
-      --border-light: #2c5366;
-      min-width: 170px;
-      padding: 0.9rem 1.8rem;
+      padding: 1rem 1.8rem;
       background: rgba(12, 18, 28, 0.9);
       border-radius: 60px;
-      border: 1px solid var(--border-light);
-      font-weight: 600;
-      font-size: 0.9rem;
-      font-family: 'Inter', monospace;
-      letter-spacing: 0.02em;
+      border: 1px solid #2c5366;
       color: #eef5ff;
       cursor: pointer;
-      transition: all 0.25s ease;
-      backdrop-filter: blur(8px);
-      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.3);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
       text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
     }
 
-    .btn i {
-      font-style: normal;
-      font-weight: 700;
-      font-size: 1.1rem;
-    }
-
-    /* accent colors for different actions */
-    .btn-primary {
-      background: linear-gradient(105deg, #0b1a2e, #07121f);
-      border-color: #3dbbd9;
-      color: #c0f2ff;
-      box-shadow: 0 0 8px rgba(0, 210, 210, 0.3);
-    }
-
-    .btn-primary:hover {
+    .btn:hover {
       border-color: #6ee7ff;
-      background: #0f212f;
-      color: white;
-      box-shadow: 0 0 16px #00ccff40;
       transform: translateY(-3px);
+      box-shadow: 0 0 16px rgba(0, 200, 255, 0.3);
     }
 
-    .btn-secondary {
-      border-color: #6c4eff;
-      background: rgba(30, 20, 60, 0.7);
+    .btn-primary {
+      border-color: #3dbbd9;
     }
 
-    .btn-secondary:hover {
-      border-color: #b77eff;
-      background: #2a1d4e;
-      transform: translateY(-3px);
-      box-shadow: 0 0 12px #9f6eff40;
-    }
-
-    .btn-heroku {
-      border-color: #6f4f9a;
-      background: linear-gradient(125deg, #1b1b2f, #0d0e1a);
-    }
-
-    .btn-heroku:hover {
-      border-color: #b47cff;
-      box-shadow: 0 0 14px #a25eff60;
-      transform: translateY(-3px);
-    }
-
-    .btn-wa {
-      border-color: #25d36680;
-      background: #0a2a1e80;
-    }
-
-    .btn-wa:hover {
-      border-color: #3ef087;
-      background: #123e2c;
-      transform: translateY(-3px);
-    }
-
-    .btn-group {
-      border-color: #e67300;
-    }
-
-    .btn-group:hover {
-      border-color: #ffaa44;
-      background: #3d280e;
-    }
-
-    /* pair special button (glowing) */
-    .btn-pair {
-      background: radial-gradient(circle at 30% 10%, #1f3348, #0a1120);
-      border-color: #2d9cdb;
-      color: #dbffff;
-      font-weight: 700;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .btn-pair::after {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -60%;
-      width: 200%;
-      height: 200%;
-      background: linear-gradient(115deg, rgba(0,255,255,0) 10%, rgba(0,230,250,0.2) 50%, rgba(0,255,255,0) 90%);
-      transform: rotate(25deg);
-      transition: all 0.6s;
-      opacity: 0;
-    }
-
-    .btn-pair:hover::after {
-      opacity: 1;
-      left: 100%;
-      transition: 0.8s;
-    }
-
-    .btn-pair:hover {
-      border-color: #7ae9ff;
-      transform: scale(1.02) translateY(-3px);
-      box-shadow: 0 0 20px #00ccff70;
-    }
-
-    /* footer links + social */
     .footer-links {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 2rem;
       margin-top: 2rem;
       padding-top: 1rem;
       border-top: 1px solid rgba(72, 187, 255, 0.2);
-      font-size: 0.8rem;
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
     }
 
     .footer-links a {
       color: #aac8e0;
       text-decoration: none;
-      font-weight: 500;
-      transition: 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
     }
 
     .footer-links a:hover {
       color: #9efff0;
-      text-shadow: 0 0 4px cyan;
-    }
-
-    .status-note {
-      text-align: center;
-      margin-top: 1.5rem;
-      font-size: 0.75rem;
-      color: #6a85a3;
-      background: #0f1422a0;
-      width: fit-content;
-      margin-left: auto;
-      margin-right: auto;
-      padding: 0.4rem 1.2rem;
-      border-radius: 30px;
-      backdrop-filter: blur(2px);
-    }
-
-    @media (max-width: 640px) {
-      .glass-container {
-        padding: 1.5rem;
-      }
-      h1 {
-        font-size: 2.2rem;
-      }
-      .btn {
-        min-width: 140px;
-        padding: 0.7rem 1rem;
-        font-size: 0.8rem;
-      }
-      .button-grid {
-        gap: 0.9rem;
-      }
     }
   </style>
 </head>
 <body>
-
 <div class="glass-container">
-  <div class="hero">
-    <div class="badge">⚡ ADVANCED WHATSAPP BOT ⚡</div>
-    <h1>ZUKO-MD</h1>
-    <div class="sub">Multi-device • Pairing • Fast & Reliable</div>
-  </div>
-
+  <h1>🔥 ZUKO-MD 🔥</h1>
+  <div class="sub">Advanced WhatsApp Bot • Multi-Device Pairing</div>
+  
   <div class="button-grid">
-    <!-- Pair Code - internal /pair endpoint -->
-    <button onclick="window.open('/pair', '_blank')" class="btn btn-pair">
-      🔑 PAIR CODE
-    </button>
-    
-    <!-- GitHub Repo -->
-    <button onclick="window.open('https://github.com/felixbassey467/ZUKO-MD', '_blank')" class="btn btn-primary">
-      📂 GitHub Repo
-    </button>
-    
-    <!-- Heroku Deploy (custom template link pointing to your repo) -->
-    <button onclick="window.open('https://dashboard.heroku.com/new?template=https://github.com/felixbassey467/ZUKO-MD', '_blank')" class="btn btn-heroku">
-      🚀 Heroku Deploy
-    </button>
-    
-    <!-- WhatsApp Group (direct link from request) -->
-    <button onclick="window.open('https://chat.whatsapp.com/DdZI3H1EFeOJs9TCIyVyXa', '_blank')" class="btn btn-wa">
-      👥 WhatsApp Group
-    </button>
-    
-    <!-- WhatsApp Channel (same as group link, but separate as channel) -->
-    <button onclick="window.open('https://chat.whatsapp.com/DdZI3H1EFeOJs9TCIyVyXa', '_blank')" class="btn btn-group">
-      📢 WA Channel
-    </button>
-    
-    <!-- Contact Me (custom support) -->
-    <button onclick="window.open('https://wa.me/255693629079', '_blank')" class="btn btn-secondary">
-      💬 Contact Support
-    </button>
+    <a href="/pair" class="btn btn-primary">🔑 Pair Code</a>
+    <a href="/qr" class="btn">📱 QR Code</a>
+    <a href="https://github.com/felixbassey467/ZUKO-MD" target="_blank" class="btn">📂 GitHub</a>
+    <a href="https://chat.whatsapp.com/DdZI3H1EFeOJs9TCIyVyXa" target="_blank" class="btn">💬 Group</a>
   </div>
-
+  
   <div class="footer-links">
-    <a href="https://github.com/felixbassey467/ZUKO-MD" target="_blank">
-      <span>⭐</span> Star on GitHub
-    </a>
-    <a href="https://chat.whatsapp.com/DdZI3H1EFeOJs9TCIyVyXa" target="_blank">
-      <span>💬</span> Join Group
-    </a>
-    <a href="https://github.com/felixbassey467" target="_blank">
-      <span>👤</span> Developer
-    </a>
-  </div>
-  <div class="status-note">
-    ✨ ZUKO-MD | Always online — Pair via /pair & deploy instantly ✨
+    <a href="https://github.com/felixbassey467/ZUKO-MD">⭐ Star on GitHub</a>
+    <a href="https://wa.me/2349079055953">📞 Contact Support</a>
   </div>
 </div>
-
-<script>
-  // (optional) smooth external link safety, all windows open in new tab.
-  // The /pair endpoint: if your backend serves pairing page, it's fine. 
-  // This frontend matches RAHMANI-style but rebranded with ZUKO-MD and your links.
-  console.log("🔥 ZUKO-MD dark dashboard ready");
-</script>
-
 </body>
 </html>

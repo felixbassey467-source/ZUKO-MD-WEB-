@@ -7,4 +7,4 @@ function makeid(num = 4) {
   }
   return result;
 }
-module.exports = {makeid};
+module.exports = { makeid };
