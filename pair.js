@@ -6,39 +6,31 @@ import pn from 'awesome-phonenumber';
 
 const router = express.Router();
 
-// Function to remove files or directories
+// Ensure the session directory exists
 function removeFile(FilePath) {
     try {
         if (!fs.existsSync(FilePath)) return false;
         fs.rmSync(FilePath, { recursive: true, force: true });
-        return true;
     } catch (e) {
         console.error('Error removing file:', e);
-        return false;
     }
 }
 
 router.get('/', async (req, res) => {
     let num = req.query.number;
-    let dirs = './' + (num || `session_${Date.now()}`);
+    let dirs = './' + (num || `session`);
 
     // Remove existing session if present
     await removeFile(dirs);
 
     // Clean the phone number - remove any non-digit characters
-    if (!num) {
-        return res.status(400).send({ code: 'Phone number is required. Please provide a number parameter.' });
-    }
-    
     num = num.replace(/[^0-9]/g, '');
 
     // Validate the phone number using awesome-phonenumber
     const phone = pn('+' + num);
     if (!phone.isValid()) {
         if (!res.headersSent) {
-            return res.status(400).send({ 
-                code: 'Invalid phone number. Please enter your full international number (e.g., 15551234567 for US, 447911123456 for UK, 84987654321 for Vietnam, etc.) without + or spaces.' 
-            });
+            return res.status(400).send({ code: 'Invalid phone number. Please enter your full international number (e.g., 15551234567 for US, 447911123456 for UK, 84987654321 for Vietnam, etc.) without + or spaces.' });
         }
         return;
     }
@@ -50,7 +42,7 @@ router.get('/', async (req, res) => {
 
         try {
             const { version, isLatest } = await fetchLatestBaileysVersion();
-            let ZUKO = makeWASocket({
+            let KnightBot = makeWASocket({
                 version,
                 auth: {
                     creds: state.creds,
@@ -68,7 +60,7 @@ router.get('/', async (req, res) => {
                 maxRetries: 5,
             });
 
-            ZUKO.ev.on('connection.update', async (update) => {
+            KnightBot.ev.on('connection.update', async (update) => {
                 const { connection, lastDisconnect, isNewLogin, isOnline } = update;
 
                 if (connection === 'open') {
@@ -76,42 +68,46 @@ router.get('/', async (req, res) => {
                     console.log("📱 Sending session file to user...");
                     
                     try {
-                        const sessionZuko = fs.readFileSync(dirs + '/creds.json');
+                        const sessionKnight = fs.readFileSync(dirs + '/creds.json');
 
-                        // Get user JID
+                        // Send session file to user
                         const userJid = jidNormalizedUser(num + '@s.whatsapp.net');
-                        
-                        // Send session file
-                        await ZUKO.sendMessage(userJid, {
-                            document: sessionZuko,
+                        await KnightBot.sendMessage(userJid, {
+                            document: sessionKnight,
                             mimetype: 'application/json',
                             fileName: 'creds.json'
                         });
                         console.log("📄 Session file sent successfully");
 
-                        // Simple setup guide without YouTube link
-                        await ZUKO.sendMessage(userJid, {
-                            text: `🔥 *ZUKO-MD V2.0 Setup Complete!*\n\n╔══════════════════════════╗\n║  ✓ Session loaded       ║\n║  ✓ Bot is ready         ║\n║  ✓ Commands active      ║\n╚══════════════════════════╝\n\n⚡ *Features:*\n├─ AI Chat Assistant\n├─ Downloader Tools\n├─ Group Management\n└─ Auto Response\n\n💡 Type *!help* to see all commands`
+                        // Send video thumbnail with caption
+                        await KnightBot.sendMessage(userJid, {
+                            image: { url: '' },
+                            caption: `🎬 _ZUKO MD V2.0 Full Setup Guide!_\n\n🚀 Bug Fixes + New Commands + Fast AI Chat `
                         });
-                        console.log("✅ Setup guide sent successfully");
+                        console.log("🎬 Video guide sent successfully");
 
-                        // Send warning message with clean design
-                        await ZUKO.sendMessage(userJid, {
-                            text: `⚠️ *CONFIDENTIAL* ⚠️\n\n┌──────────────────────┐\n│ Do not share this    │\n│ session file with    │\n│ anyone!              │\n└──────────────────────┘\n\n┌┤✑  ZUKO-MD Active\n│├─🔥 Honor • Power\n│└────────────┈ ⳹\n│©2025 ZUKO-MD\n└─────────────────┈ ⳹`
+                        // Send warning message
+                        await KnightBot.sendMessage(userJid, {
+                            text: `⚠️Do not share this file with anybody⚠️\n 
+┌┤✑  Thanks for using ZUKO-MD
+│└────────────┈ ⳹        
+│©2026 ZUKO-MD 
+└─────────────────┈ ⳹\n\n`
                         });
-                        console.log("⚠️ Security warning sent successfully");
+                        console.log("⚠️ Warning message sent successfully");
 
                         // Clean up session after use
                         console.log("🧹 Cleaning up session...");
-                        await delay(2000);
+                        await delay(1000);
                         removeFile(dirs);
                         console.log("✅ Session cleaned up successfully");
                         console.log("🎉 Process completed successfully!");
-                        
+                        // Do not exit the process, just finish gracefully
                     } catch (error) {
                         console.error("❌ Error sending messages:", error);
                         // Still clean up session even if sending fails
                         removeFile(dirs);
+                        // Do not exit the process, just finish gracefully
                     }
                 }
 
@@ -130,25 +126,21 @@ router.get('/', async (req, res) => {
                         console.log("❌ Logged out from WhatsApp. Need to generate new pair code.");
                     } else {
                         console.log("🔁 Connection closed — restarting...");
-                        // Only restart if not already cleaning up
-                        if (!res.headersSent) {
-                            initiateSession();
-                        }
+                        initiateSession();
                     }
                 }
             });
 
-            // Request pairing code if not registered
-            if (!ZUKO.authState.creds.registered) {
+            if (!KnightBot.authState.creds.registered) {
                 await delay(3000); // Wait 3 seconds before requesting pairing code
-                const cleanNum = num.replace(/[^\d+]/g, '');
-                const finalNum = cleanNum.startsWith('+') ? cleanNum.substring(1) : cleanNum;
+                num = num.replace(/[^\d+]/g, '');
+                if (num.startsWith('+')) num = num.substring(1);
 
                 try {
-                    let code = await ZUKO.requestPairingCode(finalNum);
+                    let code = await KnightBot.requestPairingCode(num);
                     code = code?.match(/.{1,4}/g)?.join('-') || code;
                     if (!res.headersSent) {
-                        console.log(`📱 Pairing code for ${num}: ${code}`);
+                        console.log({ num, code });
                         await res.send({ code });
                     }
                 } catch (error) {
@@ -156,18 +148,15 @@ router.get('/', async (req, res) => {
                     if (!res.headersSent) {
                         res.status(503).send({ code: 'Failed to get pairing code. Please check your phone number and try again.' });
                     }
-                    removeFile(dirs);
                 }
             }
 
-            ZUKO.ev.on('creds.update', saveCreds);
-            
+            KnightBot.ev.on('creds.update', saveCreds);
         } catch (err) {
             console.error('Error initializing session:', err);
             if (!res.headersSent) {
                 res.status(503).send({ code: 'Service Unavailable' });
             }
-            removeFile(dirs);
         }
     }
 
