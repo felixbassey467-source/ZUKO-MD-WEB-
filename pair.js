@@ -6,10 +6,8 @@ import {
     useMultiFileAuthState, 
     delay, 
     makeCacheableSignalKeyStore, 
-    Browsers, 
     fetchLatestBaileysVersion 
 } from '@whiskeysockets/baileys';
-import pn from 'awesome-phonenumber';
 
 const router = express.Router();
 
@@ -21,10 +19,15 @@ function removeFile(FilePath) {
 
 router.get('/', async (req, res) => {
     let num = req.query.number;
-    if (!num) return res.status(400).send({ code: "Number is required" });
+    if (!num) return res.status(400).send({ code: "Invalid Number" });
 
+    // Clean number: Remove everything except digits
     num = num.replace(/[^0-9]/g, '');
-    const dirs = `./session_${num}`;
+
+    const sessionName = `session_${num}`;
+    const dirs = `./${sessionName}`;
+
+    // Clear old session
     await removeFile(dirs);
 
     async function initiateSession() {
@@ -40,30 +43,29 @@ router.get('/', async (req, res) => {
                 },
                 printQRInTerminal: false,
                 logger: pino({ level: "fatal" }),
-                // FIX: Use an array for the browser to trigger the notification reliably
-                browser: ["Ubuntu", "Chrome", "20.0.04"], 
-                connectTimeoutMs: 60000,
+                // FIX 1: Use a manual browser array. This is the most compatible identity.
+                browser: ["Ubuntu", "Chrome", "20.0.04"],
+                // FIX 2: Added performance settings to stabilize connection
+                markOnlineOnConnect: true,
+                generateHighQualityLinkPreview: false,
                 defaultQueryTimeoutMs: 0,
-                keepAliveIntervalMs: 10000,
-                emitOwnEvents: true,
-                fireInitQueries: true,
-                generateHighQualityLinkPreview: true,
-                syncFullHistory: true,
-                markOnlineOnConnect: true
             });
 
-            // Handle pairing code request
+            // FIX 3: Wait until the socket is ready before requesting the code
             if (!KnightBot.authState.creds.registered) {
-                await delay(1500); // Small delay to let the socket stabilize
+                await delay(2000); // 2 second delay for stability
+                
                 try {
                     let code = await KnightBot.requestPairingCode(num);
                     code = code?.match(/.{1,4}/g)?.join('-') || code;
+                    
                     if (!res.headersSent) {
+                        console.log(`Pairing Code for ${num}: ${code}`);
                         res.send({ code });
                     }
                 } catch (error) {
-                    console.error('Pairing Error:', error);
-                    if (!res.headersSent) res.status(500).send({ code: "Service Error" });
+                    console.error('Error getting code:', error);
+                    if (!res.headersSent) res.status(500).send({ code: "Service Unavailable" });
                 }
             }
 
@@ -73,37 +75,40 @@ router.get('/', async (req, res) => {
                 const { connection, lastDisconnect } = update;
 
                 if (connection === 'open') {
-                    console.log("✅ Connected!");
-                    await delay(5000);
-                    const sessionPath = `${dirs}/creds.json`;
+                    console.log("✅ Successfully Linked!");
+                    await delay(3000);
                     
-                    if (fs.existsSync(sessionPath)) {
-                        const sessionFile = fs.readFileSync(sessionPath);
+                    const sessionFile = `${dirs}/creds.json`;
+                    if (fs.existsSync(sessionFile)) {
                         const userJid = KnightBot.user.id.split(':')[0] + '@s.whatsapp.net';
-
-                        // Send the file to the user
+                        
+                        // Send creds.json to the user
                         await KnightBot.sendMessage(userJid, { 
-                            document: sessionFile, 
-                            mimetype: 'application/json', 
-                            fileName: 'creds.json' 
+                            document: fs.readFileSync(sessionFile), 
+                            fileName: 'creds.json', 
+                            mimetype: 'application/json' 
                         });
 
-                        await KnightBot.sendMessage(userJid, { text: "✅ *ZUKO-MD LINKED SUCCESSFULLY*\n\nYour session file is above. Keep it safe." });
+                        await KnightBot.sendMessage(userJid, { text: "🎉 *ZUKO-MD CONNECTED* \n\nSession file sent above." });
                     }
-                    
+
                     // Cleanup
                     await delay(2000);
                     removeFile(dirs);
                 }
 
                 if (connection === 'close') {
-                    const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== 401;
-                    if (shouldReconnect) initiateSession();
+                    const statusCode = lastDisconnect?.error?.output?.statusCode;
+                    if (statusCode !== 401) {
+                        initiateSession();
+                    } else {
+                        removeFile(dirs);
+                    }
                 }
             });
 
         } catch (err) {
-            console.error('Init Error:', err);
+            console.error("Initialization error:", err);
             removeFile(dirs);
         }
     }
