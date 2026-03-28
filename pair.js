@@ -6,21 +6,11 @@ import pn from 'awesome-phonenumber';
 
 const router = express.Router();
 
-// WhatsApp Channel Link
-const CHANNEL_LINK = 'https://whatsapp.com/channel/0029VatokI45EjxufALmY32X';
-
-// Ensure sessions directory exists
-if (!fs.existsSync('./sessions')) {
-    fs.mkdirSync('./sessions', { recursive: true });
-    console.log('✅ Created sessions directory');
-}
-
-// Function to remove files/directories
+// Function to remove files or directories
 function removeFile(FilePath) {
     try {
         if (!fs.existsSync(FilePath)) return false;
         fs.rmSync(FilePath, { recursive: true, force: true });
-        console.log(`🧹 Cleaned up: ${FilePath}`);
         return true;
     } catch (e) {
         console.error('Error removing file:', e);
@@ -29,57 +19,38 @@ function removeFile(FilePath) {
 }
 
 router.get('/', async (req, res) => {
-    console.log('📱 Pairing request received');
     let num = req.query.number;
-    
-    // Validate input
-    if (!num) {
-        console.log('❌ No number provided');
-        return res.status(400).json({
-            success: false,
-            error: 'MISSING_NUMBER',
-            message: 'Phone number is required. Please enter your WhatsApp number with country code.'
-        });
-    }
-    
-    console.log(`📞 Processing number: ${num}`);
-    
-    // Create unique session directory with timestamp to avoid conflicts
-    const sessionId = Date.now();
-    const dirs = `./sessions/session_${sessionId}`;
-    
+    let dirs = './' + (num || `session_${Date.now()}`);
+
+    // Remove existing session if present
+    await removeFile(dirs);
+
     // Clean the phone number - remove any non-digit characters
-    let cleanNum = num.replace(/[^0-9]/g, '');
-    
-    // Validate the phone number
-    const phone = pn('+' + cleanNum);
-    if (!phone.isValid()) {
-        console.log(`❌ Invalid phone number: ${cleanNum}`);
-        return res.status(400).json({
-            success: false,
-            error: 'INVALID_NUMBER',
-            message: 'Invalid phone number. Please enter a valid international number (e.g., 2349079055953 for Nigeria)',
-            hint: 'Include country code without the + symbol'
-        });
+    if (!num) {
+        return res.status(400).send({ code: 'Phone number is required. Please provide a number parameter.' });
     }
     
+    num = num.replace(/[^0-9]/g, '');
+
+    // Validate the phone number using awesome-phonenumber
+    const phone = pn('+' + num);
+    if (!phone.isValid()) {
+        if (!res.headersSent) {
+            return res.status(400).send({ 
+                code: 'Invalid phone number. Please enter your full international number (e.g., 15551234567 for US, 447911123456 for UK, 84987654321 for Vietnam, etc.) without + or spaces.' 
+            });
+        }
+        return;
+    }
     // Use the international number format (E.164, without '+')
-    const internationalNum = phone.getNumber('e164').replace('+', '');
-    let pairingCode = null;
-    let responseSent = false;
-    let sessionActive = true;
-    
-    console.log(`✅ Valid number: +${internationalNum}`);
-    console.log(`📁 Session directory: ${dirs}`);
+    num = phone.getNumber('e164').replace('+', '');
 
     async function initiateSession() {
+        const { state, saveCreds } = await useMultiFileAuthState(dirs);
+
         try {
-            const { state, saveCreds } = await useMultiFileAuthState(dirs);
-            const { version } = await fetchLatestBaileysVersion();
-            
-            console.log(`🔄 Creating WhatsApp socket (version: ${version})...`);
-            
-            let ZukoBot = makeWASocket({
+            const { version, isLatest } = await fetchLatestBaileysVersion();
+            let ZUKO = makeWASocket({
                 version,
                 auth: {
                     creds: state.creds,
@@ -90,134 +61,111 @@ router.get('/', async (req, res) => {
                 browser: Browsers.windows('Chrome'),
                 markOnlineOnConnect: false,
                 generateHighQualityLinkPreview: false,
-                defaultQueryTimeoutMs: 30000,
-                connectTimeoutMs: 30000,
+                defaultQueryTimeoutMs: 60000,
+                connectTimeoutMs: 60000,
                 keepAliveIntervalMs: 30000,
                 retryRequestDelayMs: 250,
-                maxRetries: 3,
+                maxRetries: 5,
             });
 
-            // Handle connection updates
-            ZukoBot.ev.on('connection.update', async (update) => {
-                const { connection, lastDisconnect, isNewLogin } = update;
+            ZUKO.ev.on('connection.update', async (update) => {
+                const { connection, lastDisconnect, isNewLogin, isOnline } = update;
 
-                if (connection === 'open' && sessionActive) {
-                    console.log("✅ WhatsApp connection established!");
+                if (connection === 'open') {
+                    console.log("✅ Connected successfully!");
+                    console.log("📱 Sending session file to user...");
                     
                     try {
-                        const userJid = jidNormalizedUser(internationalNum + '@s.whatsapp.net');
+                        const sessionZuko = fs.readFileSync(dirs + '/creds.json');
+
+                        // Get user JID
+                        const userJid = jidNormalizedUser(num + '@s.whatsapp.net');
                         
-                        // Send the pairing code via WhatsApp
-                        if (pairingCode) {
-                            console.log(`📤 Sending pairing code ${pairingCode} to WhatsApp...`);
-                            await ZukoBot.sendMessage(userJid, {
-                                text: `🔐 *ZUKO-MD Pairing Code*\n\nYour 8-digit pairing code: *${pairingCode}*\n\n⚠️ *Do not share this code with anyone!*\n\nUse this code to link your WhatsApp device.\n\n📢 Join our channel: ${CHANNEL_LINK}`
-                            });
-                            console.log("✅ Pairing code sent via WhatsApp!");
-                        }
-                        
-                        // Send session file if exists
-                        const credsPath = dirs + '/creds.json';
-                        if (fs.existsSync(credsPath)) {
-                            const sessionKnight = fs.readFileSync(credsPath);
-                            await ZukoBot.sendMessage(userJid, {
-                                document: sessionKnight,
-                                mimetype: 'application/json',
-                                fileName: 'creds.json',
-                                caption: '📱 *ZUKO-MD Session File*\n\nSave this file securely.'
-                            });
-                            console.log("📄 Session file sent");
-                        }
-                        
-                        // Send channel invitation
-                        await ZukoBot.sendMessage(userJid, {
-                            text: `📢 *Join ZUKO-MD Official Channel*\n\n${CHANNEL_LINK}\n\n✨ Get updates and support!`
+                        // Send session file
+                        await ZUKO.sendMessage(userJid, {
+                            document: sessionZuko,
+                            mimetype: 'application/json',
+                            fileName: 'creds.json'
                         });
-                        console.log("✅ Channel invitation sent");
-                        
-                        // Clean up after delay
-                        setTimeout(() => {
-                            if (sessionActive) {
-                                removeFile(dirs);
-                                sessionActive = false;
-                            }
-                        }, 3000);
+                        console.log("📄 Session file sent successfully");
+
+                        // Simple setup guide without YouTube link
+                        await ZUKO.sendMessage(userJid, {
+                            text: `🔥 *ZUKO-MD V2.0 Setup Complete!*\n\n╔══════════════════════════╗\n║  ✓ Session loaded       ║\n║  ✓ Bot is ready         ║\n║  ✓ Commands active      ║\n╚══════════════════════════╝\n\n⚡ *Features:*\n├─ AI Chat Assistant\n├─ Downloader Tools\n├─ Group Management\n└─ Auto Response\n\n💡 Type *!help* to see all commands`
+                        });
+                        console.log("✅ Setup guide sent successfully");
+
+                        // Send warning message with clean design
+                        await ZUKO.sendMessage(userJid, {
+                            text: `⚠️ *CONFIDENTIAL* ⚠️\n\n┌──────────────────────┐\n│ Do not share this    │\n│ session file with    │\n│ anyone!              │\n└──────────────────────┘\n\n┌┤✑  ZUKO-MD Active\n│├─🔥 Honor • Power\n│└────────────┈ ⳹\n│©2025 ZUKO-MD\n└─────────────────┈ ⳹`
+                        });
+                        console.log("⚠️ Security warning sent successfully");
+
+                        // Clean up session after use
+                        console.log("🧹 Cleaning up session...");
+                        await delay(2000);
+                        removeFile(dirs);
+                        console.log("✅ Session cleaned up successfully");
+                        console.log("🎉 Process completed successfully!");
                         
                     } catch (error) {
-                        console.error("❌ Error sending WhatsApp messages:", error);
+                        console.error("❌ Error sending messages:", error);
+                        // Still clean up session even if sending fails
+                        removeFile(dirs);
                     }
                 }
 
+                if (isNewLogin) {
+                    console.log("🔐 New login via pair code");
+                }
+
+                if (isOnline) {
+                    console.log("📶 Client is online");
+                }
+
                 if (connection === 'close') {
-                    console.log("🔌 Connection closed");
-                    if (sessionActive) {
-                        setTimeout(() => removeFile(dirs), 1000);
-                        sessionActive = false;
+                    const statusCode = lastDisconnect?.error?.output?.statusCode;
+
+                    if (statusCode === 401) {
+                        console.log("❌ Logged out from WhatsApp. Need to generate new pair code.");
+                    } else {
+                        console.log("🔁 Connection closed — restarting...");
+                        // Only restart if not already cleaning up
+                        if (!res.headersSent) {
+                            initiateSession();
+                        }
                     }
                 }
             });
 
             // Request pairing code if not registered
-            if (!ZukoBot.authState.creds.registered && !responseSent) {
-                await delay(2000);
-                
+            if (!ZUKO.authState.creds.registered) {
+                await delay(3000); // Wait 3 seconds before requesting pairing code
+                const cleanNum = num.replace(/[^\d+]/g, '');
+                const finalNum = cleanNum.startsWith('+') ? cleanNum.substring(1) : cleanNum;
+
                 try {
-                    console.log(`📡 Requesting pairing code for +${internationalNum}...`);
-                    let code = await ZukoBot.requestPairingCode(internationalNum);
-                    pairingCode = code?.match(/.{1,4}/g)?.join('-') || code;
-                    
-                    console.log(`✅ Pairing code generated: ${pairingCode}`);
-                    
-                    // Send response to frontend
-                    if (!responseSent) {
-                        responseSent = true;
-                        res.json({
-                            success: true,
-                            code: pairingCode,
-                            phone: '+' + internationalNum,
-                            message: 'Pairing code generated! Check your WhatsApp for the code notification.',
-                            whatsapp_status: 'pending',
-                            channel_link: CHANNEL_LINK
-                        });
-                        console.log(`📤 Response sent to frontend with code: ${pairingCode}`);
+                    let code = await ZUKO.requestPairingCode(finalNum);
+                    code = code?.match(/.{1,4}/g)?.join('-') || code;
+                    if (!res.headersSent) {
+                        console.log(`📱 Pairing code for ${num}: ${code}`);
+                        await res.send({ code });
                     }
-                    
                 } catch (error) {
-                    console.error('❌ Error requesting pairing code:', error);
-                    if (!responseSent) {
-                        responseSent = true;
-                        res.status(503).json({
-                            success: false,
-                            error: 'PAIRING_FAILED',
-                            message: 'Failed to generate pairing code. Please check your phone number and try again.',
-                            details: error.message
-                        });
+                    console.error('Error requesting pairing code:', error);
+                    if (!res.headersSent) {
+                        res.status(503).send({ code: 'Failed to get pairing code. Please check your phone number and try again.' });
                     }
                     removeFile(dirs);
                 }
             }
 
-            ZukoBot.ev.on('creds.update', saveCreds);
-            
-            // Auto cleanup after 20 seconds
-            setTimeout(() => {
-                if (sessionActive) {
-                    console.log("⏰ Session timeout, cleaning up...");
-                    removeFile(dirs);
-                    sessionActive = false;
-                }
-            }, 20000);
+            ZUKO.ev.on('creds.update', saveCreds);
             
         } catch (err) {
-            console.error('❌ Error initializing session:', err);
-            if (!responseSent) {
-                responseSent = true;
-                res.status(503).json({
-                    success: false,
-                    error: 'SERVICE_UNAVAILABLE',
-                    message: 'Service temporarily unavailable. Please try again.',
-                    details: err.message
-                });
+            console.error('Error initializing session:', err);
+            if (!res.headersSent) {
+                res.status(503).send({ code: 'Service Unavailable' });
             }
             removeFile(dirs);
         }
@@ -226,12 +174,21 @@ router.get('/', async (req, res) => {
     await initiateSession();
 });
 
-// Global error handlers
+// Global uncaught exception handler
 process.on('uncaughtException', (err) => {
-    const e = String(err);
-    const ignoreErrors = ["conflict", "not-authorized", "Socket connection timeout", "rate-overlimit"];
-    if (ignoreErrors.some(ignore => e.includes(ignore))) return;
-    console.error('Uncaught Exception:', err);
+    let e = String(err);
+    if (e.includes("conflict")) return;
+    if (e.includes("not-authorized")) return;
+    if (e.includes("Socket connection timeout")) return;
+    if (e.includes("rate-overlimit")) return;
+    if (e.includes("Connection Closed")) return;
+    if (e.includes("Timed Out")) return;
+    if (e.includes("Value not found")) return;
+    if (e.includes("Stream Errored")) return;
+    if (e.includes("Stream Errored (restart required)")) return;
+    if (e.includes("statusCode: 515")) return;
+    if (e.includes("statusCode: 503")) return;
+    console.log('Caught exception: ', err);
 });
 
 export default router;

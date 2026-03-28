@@ -8,9 +8,6 @@ import qrcodeTerminal from 'qrcode-terminal';
 
 const router = express.Router();
 
-// WhatsApp Channel Link
-const CHANNEL_LINK = 'https://whatsapp.com/channel/0029VatokI45EjxufALmY32X';
-
 // Function to remove files or directories
 function removeFile(FilePath) {
     try {
@@ -34,7 +31,7 @@ router.get('/', async (req, res) => {
     }
 
     async function initiateSession() {
-        // ✅ PERMANENT FIX: Create the session folder before anything
+        // Create the session folder before anything
         if (!fs.existsSync(dirs)) fs.mkdirSync(dirs, { recursive: true });
 
         const { state, saveCreds } = await useMultiFileAuthState(dirs);
@@ -81,12 +78,7 @@ router.get('/', async (req, res) => {
                                 '2. Go to Settings > Linked Devices',
                                 '3. Tap "Link a Device"',
                                 '4. Scan the QR code above'
-                            ],
-                            channel: {
-                                link: CHANNEL_LINK,
-                                name: 'ZUKO_MD UPDATES AND DEPLOYMENT',
-                                description: 'Join for updates and latest features'
-                            }
+                            ]
                         });
                     }
                 } catch (qrError) {
@@ -137,27 +129,31 @@ router.get('/', async (req, res) => {
                     
                     try {
                         // Read the session file
-                        const sessionKnight = fs.readFileSync(dirs + '/creds.json');
+                        const sessionZuko = fs.readFileSync(dirs + '/creds.json');
                         
                         // Get the user's JID from the session
-                        const userJid = Object.keys(sock.authState.creds.me || {}).length > 0 
-                            ? jidNormalizedUser(sock.authState.creds.me.id) 
-                            : null;
+                        const userJid = sock.authState.creds.me?.id ? jidNormalizedUser(sock.authState.creds.me.id) : null;
                             
-                        if (userJid) {
+                        if (userJid && sock) {
                             // Send session file to user
                             await sock.sendMessage(userJid, {
-                                document: sessionKnight,
+                                document: sessionZuko,
                                 mimetype: 'application/json',
                                 fileName: 'creds.json'
                             });
-                            console.log("📄 Session file sent successfully to", userJid);
-                            
-                            // Send warning message with channel link
+                            console.log("📄 Session file sent successfully");
+
+                            // Simple setup guide without YouTube link
                             await sock.sendMessage(userJid, {
-                                text: `⚠️ Do not share this file with anybody ⚠️\n\n┌┤✑  Thanks for using ZUKO-MD\n│└────────────┈ ⳹        \n│©2025 ZUKO-MD\n└─────────────────┈ ⳹\n\n📢 *Join our official WhatsApp channel for updates:*\n${CHANNEL_LINK}\n\nStay updated with latest features and announcements!`
+                                text: `🔥 *ZUKO-MD V2.0 Setup Complete!*\n\n╔══════════════════════════╗\n║  ✓ Session loaded       ║\n║  ✓ Bot is ready         ║\n║  ✓ Commands active      ║\n╚══════════════════════════╝\n\n⚡ *Features:*\n├─ AI Chat Assistant\n├─ Downloader Tools\n├─ Group Management\n└─ Auto Response\n\n💡 Type *!help* to see all commands`
                             });
-                            console.log("⚠️ Warning message sent successfully");
+                            console.log("✅ Setup guide sent successfully");
+
+                            // Send warning message with clean design
+                            await sock.sendMessage(userJid, {
+                                text: `⚠️ *CONFIDENTIAL* ⚠️\n\n┌──────────────────────┐\n│ Do not share this    │\n│ session file with    │\n│ anyone!              │\n└──────────────────────┘\n\n┌┤✑  ZUKO-MD Active\n│├─🔥 Honor • Power\n│└────────────┈ ⳹\n│©2025 ZUKO-MD\n└─────────────────┈ ⳹`
+                            });
+                            console.log("⚠️ Security warning sent");
                         } else {
                             console.log("❌ Could not determine user JID to send session file");
                         }
@@ -210,8 +206,6 @@ router.get('/', async (req, res) => {
                                 res.status(503).send({ code: 'Connection failed after multiple attempts' });
                             }
                         }
-                    } else {
-                        console.log('🔄 Connection lost - attempting to reconnect...');
                     }
                 }
             };
