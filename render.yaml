@@ -1,1 +1,0 @@
-services:  - type: web    name: zuko-md    env: node    buildCommand: npm install    startCommand: npm start    envVars:      - key: NODE_VERSION        value: 20.0.0      - key: PORT        value: 8000    plan: free
