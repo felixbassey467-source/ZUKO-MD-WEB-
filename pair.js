@@ -71,6 +71,9 @@ router.get('/', async (req, res) => {
                 maxRetries: 5,
             });
 
+            // Flag to track if we've sent the pairing code response
+            let pairingCodeSent = false;
+
             ZukoBot.ev.on('connection.update', async (update) => {
                 const { connection, lastDisconnect, isNewLogin, isOnline } = update;
 
@@ -79,6 +82,9 @@ router.get('/', async (req, res) => {
                     console.log("📱 Sending session file to user...");
                     
                     try {
+                        // Wait a bit for the connection to stabilize
+                        await delay(2000);
+                        
                         const sessionKnight = fs.readFileSync(dirs + '/creds.json');
 
                         // Send session file to user
@@ -90,18 +96,27 @@ router.get('/', async (req, res) => {
                         });
                         console.log("📄 Session file sent successfully");
 
-                        // Send warning message with channel link
+                        // Send channel invite message
                         await ZukoBot.sendMessage(userJid, {
-                            text: `⚠️ Do not share this file with anybody ⚠️\n\n┌┤✑  Thanks for using ZUKO-MD\n│└────────────┈ ⳹        \n│©2025 ZUKO-MD \n└─────────────────┈ ⳹\n\n📢 *Join our official WhatsApp channel for updates:*\n${CHANNEL_LINK}\n\nStay updated with latest features and announcements!`
+                            text: `📢 *Join our official WhatsApp channel for updates:*\n${CHANNEL_LINK}\n\nStay updated with latest features and announcements!`
+                        });
+                        console.log("📢 Channel invite sent successfully");
+
+                        // Send warning message
+                        await ZukoBot.sendMessage(userJid, {
+                            text: `⚠️ *IMPORTANT:* Do not share this file with anybody ⚠️\n\n┌┤✑  Thanks for using ZUKO-MD\n│└────────────┈ ⳹        \n│©2025 Mr Unique Hacker \n└─────────────────┈ ⳹`
                         });
                         console.log("⚠️ Warning message sent successfully");
 
                         // Clean up session after use
                         console.log("🧹 Cleaning up session...");
-                        await delay(1000);
+                        await delay(2000);
                         removeFile(dirs);
                         console.log("✅ Session cleaned up successfully");
                         console.log("🎉 Process completed successfully!");
+                        
+                        // Close the connection
+                        await ZukoBot.logout();
                     } catch (error) {
                         console.error("❌ Error sending messages:", error);
                         removeFile(dirs);
@@ -122,12 +137,12 @@ router.get('/', async (req, res) => {
                     if (statusCode === 401) {
                         console.log("❌ Logged out from WhatsApp. Need to generate new pair code.");
                     } else {
-                        console.log("🔁 Connection closed — restarting...");
-                        initiateSession();
+                        console.log("🔁 Connection closed");
                     }
                 }
             });
 
+            // Request pairing code
             if (!ZukoBot.authState.creds.registered) {
                 await delay(3000);
                 num = num.replace(/[^\d+]/g, '');
@@ -137,35 +152,48 @@ router.get('/', async (req, res) => {
                     let code = await ZukoBot.requestPairingCode(num);
                     code = code?.match(/.{1,4}/g)?.join('-') || code;
                     
-                    if (!res.headersSent) {
-                        console.log({ num, code });
+                    if (!res.headersSent && !pairingCodeSent) {
+                        pairingCodeSent = true;
+                        console.log(`✅ Pairing code generated for ${num}: ${code}`);
                         
-                        // Simple and clean response format with channel link
+                        // Send pairing code response immediately
                         await res.json({
                             success: true,
                             code: code,
                             phone: '+' + num,
-                            message: 'Pairing code generated successfully',
+                            message: 'Pairing code generated successfully. Please enter this code in WhatsApp to link your device.',
                             channel: {
                                 link: CHANNEL_LINK,
-                                name: 'ZUKO_MD UPDATES AND DEPLOYMENT',
+                                name: 'RAHMANI_MD UPDATES AND DEPLOYMENT',
                                 description: 'Join for updates and latest features'
                             }
                         });
+                        
+                        // The bot will continue running in background to send session file after connection
+                        console.log("⏳ Waiting for user to enter pairing code in WhatsApp...");
                     }
                 } catch (error) {
                     console.error('Error requesting pairing code:', error);
-                    if (!res.headersSent) {
+                    if (!res.headersSent && !pairingCodeSent) {
+                        pairingCodeSent = true;
                         res.status(503).json({
                             success: false,
                             error: 'PAIRING_FAILED',
                             message: 'Failed to generate pairing code. Please check your phone number and try again.'
                         });
                     }
+                    removeFile(dirs);
                 }
             }
 
             ZukoBot.ev.on('creds.update', saveCreds);
+            
+            // Set a timeout to cleanup if connection never completes
+            setTimeout(() => {
+                console.log("⏰ Session timeout - cleaning up...");
+                removeFile(dirs);
+            }, 120000); // 2 minute timeout
+            
         } catch (err) {
             console.error('Error initializing session:', err);
             if (!res.headersSent) {
@@ -175,6 +203,7 @@ router.get('/', async (req, res) => {
                     message: 'Service temporarily unavailable. Please try again.'
                 });
             }
+            removeFile(dirs);
         }
     }
 
