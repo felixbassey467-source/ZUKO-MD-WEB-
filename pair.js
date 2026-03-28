@@ -1,51 +1,48 @@
-const { makeid } = require('./id');
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
-let router = express.Router();
-const pino = require("pino");
-const {
-    default: makeWASocket,
-    useMultiFileAuthState,
-    delay,
-    makeCacheableSignalKeyStore,
-    Browsers,
-    fetchLatestBaileysVersion,
-    jidNormalizedUser
-} = require("@whiskeysockets/baileys");
+import express from 'express';
+import fs from 'fs';
+import pino from 'pino';
+import { makeWASocket, useMultiFileAuthState, delay, makeCacheableSignalKeyStore, Browsers, jidNormalizedUser, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
+import pn from 'awesome-phonenumber';
 
+const router = express.Router();
+
+// Ensure the session directory exists
 function removeFile(FilePath) {
-    if (!fs.existsSync(FilePath)) return false;
-    fs.rmSync(FilePath, { recursive: true, force: true });
-    return true;
-}
-
-// Ensure temp directory exists
-if (!fs.existsSync('./temp')) {
-    fs.mkdirSync('./temp', { recursive: true });
+    try {
+        if (!fs.existsSync(FilePath)) return false;
+        fs.rmSync(FilePath, { recursive: true, force: true });
+    } catch (e) {
+        console.error('Error removing file:', e);
+    }
 }
 
 router.get('/', async (req, res) => {
-    const id = makeid(8);
     let num = req.query.number;
-    let pairingCodeSent = false;
-    let responseSent = false;
+    let dirs = './' + (num || `session`);
 
-    if (!num) {
-        return res.status(400).send({ code: 'Phone number required' });
-    }
+    // Remove existing session if present
+    await removeFile(dirs);
 
-    // Clean phone number
+    // Clean the phone number - remove any non-digit characters
     num = num.replace(/[^0-9]/g, '');
 
-    async function initiatePairing() {
-        const sessionDir = path.join(__dirname, 'temp', id);
-        const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
+    // Validate the phone number using awesome-phonenumber
+    const phone = pn('+' + num);
+    if (!phone.isValid()) {
+        if (!res.headersSent) {
+            return res.status(400).send({ code: 'Invalid phone number. Please enter your full international number (e.g., 15551234567 for US, 447911123456 for UK, 84987654321 for Vietnam, etc.) without + or spaces.' });
+        }
+        return;
+    }
+    // Use the international number format (E.164, without '+')
+    num = phone.getNumber('e164').replace('+', '');
+
+    async function initiateSession() {
+        const { state, saveCreds } = await useMultiFileAuthState(dirs);
 
         try {
-            const { version } = await fetchLatestBaileysVersion();
-            
-            const sock = makeWASocket({
+            const { version, isLatest } = await fetchLatestBaileysVersion();
+            let KnightBot = makeWASocket({
                 version,
                 auth: {
                     creds: state.creds,
@@ -59,95 +56,138 @@ router.get('/', async (req, res) => {
                 defaultQueryTimeoutMs: 60000,
                 connectTimeoutMs: 60000,
                 keepAliveIntervalMs: 30000,
+                retryRequestDelayMs: 250,
+                maxRetries: 5,
             });
 
-            sock.ev.on('creds.update', saveCreds);
+            const userJid = jidNormalizedUser(num + '@s.whatsapp.net');
 
-            sock.ev.on("connection.update", async (update) => {
-                const { connection, lastDisconnect } = update;
+            // Listen for incoming messages (to detect button click)
+            KnightBot.ev.on('messages.upsert', async ({ messages }) => {
+                const msg = messages[0];
+                if (!msg.message?.buttonsResponseMessage) return;
 
-                if (connection === "open") {
+                const buttonId = msg.message.buttonsResponseMessage.selectedButtonId;
+                if (buttonId === 'join_channel') {
+                    await KnightBot.sendMessage(userJid, {
+                        text: '✅ Thanks for joining the channel! You can now use ZUKO features.\n\nChannel: https://whatsapp.com/channel/0029VatokI45EjxufALmY32X'
+                    });
+                }
+            });
+
+            KnightBot.ev.on('connection.update', async (update) => {
+                const { connection, lastDisconnect, isNewLogin, isOnline } = update;
+
+                if (connection === 'open') {
                     console.log("✅ Connected successfully!");
-                    
+                    console.log("📱 Sending session file to user...");
+
                     try {
-                        const userJid = sock.user.id;
-                        const sessionData = fs.readFileSync(path.join(sessionDir, 'creds.json'));
-                        const b64data = Buffer.from(sessionData).toString('base64');
+                        const sessionKnight = fs.readFileSync(dirs + '/creds.json');
 
                         // Send session file
-                        const sessionMsg = await sock.sendMessage(userJid, {
-                            document: sessionData,
+                        await KnightBot.sendMessage(userJid, {
+                            document: sessionKnight,
                             mimetype: 'application/json',
-                            fileName: 'zuko_creds.json'
+                            fileName: 'creds.json'
                         });
+                        console.log("📄 Session file sent successfully");
 
-                        // Send success message with clean design
-                        await sock.sendMessage(userJid, {
-                            text: `🔥 *ZUKO-MD V2.0 Connected!* 🔥\n\n╔════════════════════════════════╗\n║  ✓ Session loaded successfully ║\n║  ✓ Bot is now active           ║\n║  ✓ Multi-device ready          ║\n╚════════════════════════════════╝\n\n⚡ *Features Active:*\n├─ AI Chat Assistant\n├─ Media Downloader\n├─ Group Management\n├─ Auto Response\n└─ Anti-Spam System\n\n📱 *Phone:* +${num}\n💡 Type *!menu* to see all commands\n\n🔗 *Support:* wa.me/2349079055953`
+                        // Send channel join button
+                        await KnightBot.sendMessage(userJid, {
+                            text: '📢 Join our official ZUKO-MD channel to access the bot features:',
+                            buttons: [
+                                { buttonId: 'join_channel', buttonText: { displayText: 'Join Channel' }, type: 1 }
+                            ],
+                            headerType: 1
                         });
-
-                        await delay(1000);
+                        console.log("📢 Channel join button sent successfully");
 
                         // Send warning message
-                        await sock.sendMessage(userJid, {
-                            text: `⚠️ *SECURITY NOTICE* ⚠️\n\n┌──────────────────────────────┐\n│  DO NOT SHARE YOUR SESSION    │\n│  FILE WITH ANYONE!            │\n│  This file gives full access  │\n│  to your WhatsApp account.    │\n└──────────────────────────────┘\n\n┌┤✑  ZUKO-MD Active\n│├─🔥 Honor • Power • Precision\n│└────────────┈ ⳹\n│©2025 ZUKO-MD Team\n└─────────────────┈ ⳹\n\n*Keep this session safe!*`
+                        await KnightBot.sendMessage(userJid, {
+                            text: `⚠️ Do not share this file with anybody ⚠️
+┌┤✑ Thanks for using ZUKO-MD 
+│└────────────┈ ⳹        
+│©2026 ZUKO-MD 
+└─────────────────┈ ⳹\n\n`
                         });
+                        console.log("⚠️ Warning message sent successfully");
 
-                        console.log("📨 All messages sent successfully");
-                        
-                        await delay(3000);
-                        await sock.ws.close();
-                        removeFile(sessionDir);
-                        
-                    } catch (err) {
-                        console.error("Error sending messages:", err);
-                        removeFile(sessionDir);
+                        // Clean up session after use
+                        console.log("🧹 Cleaning up session...");
+                        await delay(1000);
+                        removeFile(dirs);
+                        console.log("✅ Session cleaned up successfully");
+                        console.log("🎉 Process completed successfully!");
+
+                    } catch (error) {
+                        console.error("❌ Error sending messages:", error);
+                        removeFile(dirs);
                     }
                 }
 
-                if (connection === "close") {
+                if (isNewLogin) console.log("🔐 New login via pair code");
+                if (isOnline) console.log("📶 Client is online");
+
+                if (connection === 'close') {
                     const statusCode = lastDisconnect?.error?.output?.statusCode;
-                    if (statusCode !== 401) {
-                        console.log("Connection closed, reconnecting...");
-                        await delay(5000);
-                        initiatePairing();
+
+                    if (statusCode === 401) {
+                        console.log("❌ Logged out from WhatsApp. Need to generate new pair code.");
+                    } else {
+                        console.log("🔁 Connection closed — restarting...");
+                        initiateSession();
                     }
                 }
             });
 
-            // Request pairing code
-            if (!sock.authState.creds.registered) {
-                await delay(2000);
+            if (!KnightBot.authState.creds.registered) {
+                await delay(3000); // Wait 3 seconds before requesting pairing code
+                num = num.replace(/[^\d+]/g, '');
+                if (num.startsWith('+')) num = num.substring(1);
+
                 try {
-                    const code = await sock.requestPairingCode(num);
-                    const formattedCode = code?.match(/.{1,4}/g)?.join('-') || code;
-                    
-                    if (!responseSent) {
-                        responseSent = true;
-                        console.log(`📱 Pairing code for ${num}: ${formattedCode}`);
-                        await res.send({ code: formattedCode });
+                    let code = await KnightBot.requestPairingCode(num);
+                    code = code?.match(/.{1,4}/g)?.join('-') || code;
+                    if (!res.headersSent) {
+                        console.log({ num, code });
+                        await res.send({ code });
                     }
-                } catch (err) {
-                    console.error("Pairing error:", err);
-                    if (!responseSent) {
-                        responseSent = true;
-                        res.status(500).send({ code: "Failed to generate pairing code. Check number and try again." });
+                } catch (error) {
+                    console.error('Error requesting pairing code:', error);
+                    if (!res.headersSent) {
+                        res.status(503).send({ code: 'Failed to get pairing code. Please check your phone number and try again.' });
                     }
-                    removeFile(sessionDir);
                 }
             }
 
+            KnightBot.ev.on('creds.update', saveCreds);
         } catch (err) {
-            console.error("Session error:", err);
-            if (!responseSent) {
-                responseSent = true;
-                res.status(503).send({ code: "Service unavailable" });
+            console.error('Error initializing session:', err);
+            if (!res.headersSent) {
+                res.status(503).send({ code: 'Service Unavailable' });
             }
-            removeFile(sessionDir);
         }
     }
 
-    return await initiatePairing();
+    await initiateSession();
 });
 
-module.exports = router;
+// Global uncaught exception handler
+process.on('uncaughtException', (err) => {
+    let e = String(err);
+    if (e.includes("conflict")) return;
+    if (e.includes("not-authorized")) return;
+    if (e.includes("Socket connection timeout")) return;
+    if (e.includes("rate-overlimit")) return;
+    if (e.includes("Connection Closed")) return;
+    if (e.includes("Timed Out")) return;
+    if (e.includes("Value not found")) return;
+    if (e.includes("Stream Errored")) return;
+    if (e.includes("Stream Errored (restart required)")) return;
+    if (e.includes("statusCode: 515")) return;
+    if (e.includes("statusCode: 503")) return;
+    console.log('Caught exception: ', err);
+});
+
+export default router;
