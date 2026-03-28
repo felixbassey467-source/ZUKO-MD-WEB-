@@ -17,7 +17,7 @@
   "author": "ZUKO-MD",
   "license": "ISC",
   "dependencies": {
-    "@whiskeysockets/baileys": "^6.7.9",
+    "@whiskeysockets/baileys": "^6.7.21",
     "awesome-phonenumber": "^7.1.0",
     "express": "^4.18.2",
     "pino": "^8.17.2",
