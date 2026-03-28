@@ -1,12 +1,9 @@
-This is a complete HTML document that creates a dark-themed WhatsApp linker interface with automatic background music and a battery indicator.
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>ZUKO-MD | Dark Nexus • Battery Pulse</title>
+  <title>ZUKO-MD | Dark Nexus • WhatsApp Linker Pro</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
   <style>
@@ -21,242 +18,250 @@ This is a complete HTML document that creates a dark-themed WhatsApp linker inte
       --primary-dark: #ea580c;
       --primary-glow: rgba(249, 115, 22, 0.5);
       --bg-deep: #030303;
-      --bg-card: #0c0c0c;
-      --bg-elevated: #141414;
-      --border-glow: rgba(249, 115, 22, 0.25);
-      --text-main: #fefefe;
+      --bg-card: #0a0a0a;
+      --bg-elevated: #121212;
+      --border-glow: rgba(249, 115, 22, 0.35);
+      --text-main: #ffffff;
       --text-dim: #a1a1aa;
       --success: #22c55e;
-      --error: #f43f5e;
+      --error: #ef4444;
+      --warning: #f59e0b;
     }
 
     body {
       font-family: 'Inter', sans-serif;
-      background: radial-gradient(ellipse at 30% 40%, #0a0a0a, #000000);
+      background: radial-gradient(ellipse at 30% 30%, #0a0a0a, #000000);
       min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 1.5rem;
+      padding: 2rem;
       position: relative;
       overflow-x: hidden;
     }
 
-    /* animated grain overlay */
-    body::after {
+    /* animated cyber background */
+    body::before {
       content: '';
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJmIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iLjciIG51bU9jdGF2ZXM9IjMiLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjZikiIG9wYWNpdHk9IjAuMDMiLz48L3N2Zz4=');
-      background-repeat: repeat;
+      background-image: 
+        repeating-linear-gradient(45deg, rgba(249,115,22,0.02) 0px, rgba(249,115,22,0.02) 2px, transparent 2px, transparent 8px),
+        radial-gradient(circle at 80% 20%, rgba(249,115,22,0.08) 0%, transparent 50%);
       pointer-events: none;
-      opacity: 0.4;
       z-index: 0;
     }
 
-    /* main card */
+    /* main container - broader design */
     .glass-panel {
       width: 100%;
-      max-width: 520px;
-      background: rgba(12, 12, 12, 0.85);
-      backdrop-filter: blur(12px);
-      border-radius: 2.5rem;
-      border: 1px solid rgba(249, 115, 22, 0.3);
-      box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.8), 0 0 0 0.5px rgba(249, 115, 22, 0.2);
-      padding: 1.8rem;
+      max-width: 680px;
+      background: rgba(8, 8, 12, 0.92);
+      backdrop-filter: blur(16px);
+      border-radius: 3rem;
+      border: 1px solid rgba(249, 115, 22, 0.4);
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(249, 115, 22, 0.2);
+      padding: 2.2rem;
       transition: all 0.3s ease;
       position: relative;
       z-index: 2;
     }
 
-    /* battery + music status bar */
+    /* status bar - enhanced */
     .status-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.8rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(249, 115, 22, 0.2);
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
     .battery-module {
-      background: #0f0f12;
-      padding: 0.4rem 1rem;
-      border-radius: 60px;
+      background: #0f0f14;
+      padding: 0.5rem 1.2rem;
+      border-radius: 80px;
       display: flex;
       align-items: center;
-      gap: 10px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      letter-spacing: 0.3px;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 1rem;
       backdrop-filter: blur(4px);
-      border: 1px solid #2a2a2a;
+      border: 1px solid #2a2a2f;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
 
     .battery-icon {
-      font-size: 1.2rem;
-      color: #ddd;
+      font-size: 1.3rem;
     }
 
     .battery-level {
-      font-family: monospace;
-      font-weight: 700;
-      background: linear-gradient(135deg, #f0f0f0, #cbd5e1);
+      font-family: 'Monaco', monospace;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, #ffb347);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
+      font-size: 1.1rem;
     }
 
     .music-badge {
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(0, 0, 0, 0.7);
       backdrop-filter: blur(8px);
-      padding: 0.35rem 1rem;
-      border-radius: 60px;
+      padding: 0.45rem 1.2rem;
+      border-radius: 80px;
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 0.75rem;
+      gap: 10px;
+      font-size: 0.85rem;
       font-weight: 500;
       color: var(--text-dim);
-      border: 0.5px solid rgba(249, 115, 22, 0.4);
+      border: 1px solid rgba(249, 115, 22, 0.5);
+      cursor: pointer;
+      transition: all 0.2s;
     }
 
     .music-badge i {
       color: var(--primary);
-      font-size: 0.8rem;
-      animation: subtlePulse 1.8s infinite;
+      font-size: 1rem;
+      animation: pulseLight 1.5s infinite;
     }
 
-    @keyframes subtlePulse {
-      0% { text-shadow: 0 0 0px var(--primary); opacity: 0.7; }
-      100% { text-shadow: 0 0 5px var(--primary); opacity: 1; }
+    @keyframes pulseLight {
+      0%, 100% { text-shadow: 0 0 0px var(--primary); opacity: 0.8; }
+      50% { text-shadow: 0 0 8px var(--primary); opacity: 1; }
     }
 
-    /* logo + header */
+    /* hero section - broader */
     .hero {
       text-align: center;
       margin-bottom: 2rem;
     }
     .fire-logo {
-      width: 80px;
-      height: 80px;
+      width: 100px;
+      height: 100px;
       background: linear-gradient(145deg, #f97316, #c2410c);
-      border-radius: 28px;
-      margin: 0 auto 1rem;
+      border-radius: 32px;
+      margin: 0 auto 1.2rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.4rem;
-      box-shadow: 0 12px 28px rgba(249, 115, 22, 0.3);
+      font-size: 3rem;
+      box-shadow: 0 15px 35px rgba(249, 115, 22, 0.4);
       transition: 0.2s;
     }
     .title-glow {
-      font-size: 2rem;
+      font-size: 2.5rem;
       font-weight: 800;
-      background: linear-gradient(135deg, #ff9a4a, #ff6a1a);
+      background: linear-gradient(135deg, #ffae70, #ff6a1a);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
       letter-spacing: -0.5px;
+      margin-bottom: 0.5rem;
     }
     .sub {
       color: var(--text-dim);
-      font-size: 0.8rem;
-      margin-top: 0.4rem;
+      font-size: 0.9rem;
+      letter-spacing: 0.3px;
     }
 
-    /* social row */
+    /* social row - bigger */
     .social-row {
       display: flex;
       justify-content: center;
-      gap: 1rem;
-      margin: 1.5rem 0;
+      gap: 1.2rem;
+      margin: 1.8rem 0;
     }
     .social-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 30px;
-      background: #18181b;
+      width: 48px;
+      height: 48px;
+      border-radius: 40px;
+      background: #121217;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       color: #e4e4e7;
-      font-size: 1.2rem;
-      transition: all 0.2s ease;
-      border: 1px solid #2c2c2f;
+      font-size: 1.4rem;
+      transition: all 0.25s ease;
+      border: 1px solid #2c2c32;
       text-decoration: none;
     }
     .social-icon:hover {
-      transform: translateY(-4px);
+      transform: translateY(-5px);
       border-color: var(--primary);
       color: var(--primary);
-      background: #1f1f24;
+      background: #1e1e26;
+      box-shadow: 0 8px 20px rgba(249,115,22,0.3);
     }
 
-    /* toggle */
+    /* toggle switch - enhanced */
     .toggle-dual {
       display: flex;
-      background: #101014;
-      border-radius: 60px;
-      padding: 4px;
-      margin: 1.8rem 0 1.5rem;
-      border: 1px solid #222;
+      background: #0a0a0f;
+      border-radius: 80px;
+      padding: 6px;
+      margin: 1.5rem 0 1.8rem;
+      border: 1px solid #26262c;
     }
     .toggle-btn {
       flex: 1;
       text-align: center;
-      padding: 0.7rem 0;
-      border-radius: 60px;
-      font-weight: 600;
-      font-size: 0.85rem;
+      padding: 0.9rem 0;
+      border-radius: 80px;
+      font-weight: 700;
+      font-size: 1rem;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.25s;
       background: transparent;
       color: #9ca3af;
     }
     .toggle-btn i {
-      margin-right: 8px;
+      margin-right: 10px;
+      font-size: 1.1rem;
     }
     .toggle-btn.active {
       background: linear-gradient(95deg, #f97316, #ea580c);
       color: white;
-      box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+      box-shadow: 0 5px 15px rgba(249, 115, 22, 0.5);
     }
 
-    /* input */
+    /* input group - bigger */
     .input-wrap {
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.8rem;
       transition: 0.2s;
     }
     .input-wrap.hidden {
       display: none;
     }
     .label-styled {
-      font-size: 0.75rem;
+      font-size: 0.85rem;
       text-transform: uppercase;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      color: #a1a1aa;
-      margin-bottom: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #b9b9c3;
+      margin-bottom: 0.8rem;
       display: block;
     }
     .phone-input {
       width: 100%;
-      background: #0a0a0c;
-      border: 1.5px solid #262626;
-      border-radius: 1.5rem;
-      padding: 0.9rem 1.2rem;
+      background: #0c0c10;
+      border: 2px solid #28282e;
+      border-radius: 2rem;
+      padding: 1rem 1.5rem;
       color: white;
-      font-size: 1rem;
+      font-size: 1.1rem;
       transition: all 0.2s;
     }
     .phone-input:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.25);
+      box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.25);
     }
 
     /* action button */
@@ -264,69 +269,71 @@ This is a complete HTML document that creates a dark-themed WhatsApp linker inte
       width: 100%;
       background: linear-gradient(100deg, #f97316, #dc5f00);
       border: none;
-      border-radius: 2rem;
-      padding: 0.9rem;
-      font-weight: 700;
-      font-size: 1rem;
+      border-radius: 2.2rem;
+      padding: 1rem;
+      font-weight: 800;
+      font-size: 1.1rem;
       color: white;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 12px;
       cursor: pointer;
       transition: all 0.25s;
-      margin-bottom: 1.2rem;
-      box-shadow: 0 5px 12px rgba(0,0,0,0.3);
+      margin-bottom: 1.5rem;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.4);
     }
     .action-btn:hover {
       transform: scale(0.98);
       background: linear-gradient(100deg, #ff8522, #f15b00);
-      box-shadow: 0 6px 16px rgba(249, 115, 22, 0.5);
+      box-shadow: 0 8px 24px rgba(249, 115, 22, 0.5);
     }
     .action-btn.hidden {
       display: none;
     }
 
-    /* code display */
+    /* result display - larger */
     .code-card {
-      background: #0b0b0e;
-      border-radius: 1.8rem;
-      padding: 1rem;
+      background: #0b0b10;
+      border-radius: 2rem;
+      padding: 1.4rem;
       text-align: center;
-      border: 1px solid #2a2a2a;
-      margin-bottom: 1rem;
+      border: 1px solid #2e2e34;
+      margin-bottom: 1.2rem;
       font-family: 'Monaco', monospace;
-      font-weight: 600;
-      font-size: 1.1rem;
-      letter-spacing: 1px;
-      min-height: 70px;
+      font-weight: 700;
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+      min-height: 90px;
       display: flex;
       align-items: center;
       justify-content: center;
+      word-break: break-word;
     }
     .qr-container {
-      background: #0b0b0e;
-      border-radius: 1.8rem;
-      padding: 1.2rem;
+      background: #0b0b10;
+      border-radius: 2rem;
+      padding: 1.5rem;
       text-align: center;
-      margin-bottom: 1rem;
-      border: 1px solid #2a2a2a;
+      margin-bottom: 1.2rem;
+      border: 1px solid #2e2e34;
       display: none;
     }
     .qr-image {
-      max-width: 220px;
+      max-width: 260px;
       background: white;
-      border-radius: 24px;
-      padding: 12px;
+      border-radius: 28px;
+      padding: 14px;
       margin: 0 auto;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.5);
     }
     .copy-secondary {
-      background: #131318;
-      border: 1px solid #2e2e32;
+      background: #14141c;
+      border: 1.5px solid #32323a;
       border-radius: 2rem;
-      padding: 0.7rem;
-      font-weight: 600;
+      padding: 0.9rem;
+      font-weight: 700;
+      font-size: 1rem;
       width: 100%;
       color: #eee;
       cursor: pointer;
@@ -334,37 +341,62 @@ This is a complete HTML document that creates a dark-themed WhatsApp linker inte
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 10px;
     }
     .copy-secondary:hover {
       border-color: var(--primary);
-      background: #1e1e24;
+      background: #1e1e28;
+      color: var(--primary);
     }
     .footer-note {
       text-align: center;
-      margin-top: 1.8rem;
-      font-size: 0.7rem;
-      color: #5e5e6b;
-      border-top: 1px solid #1f1f24;
-      padding-top: 1rem;
+      margin-top: 2rem;
+      font-size: 0.75rem;
+      color: #6b6b7a;
+      border-top: 1px solid #202024;
+      padding-top: 1.2rem;
     }
     .spinner {
       text-align: center;
-      margin: 1rem 0;
+      margin: 1.2rem 0;
       display: none;
     }
     .fa-spin-custom {
       animation: spin 1s infinite linear;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .msg-success { color: #22c55e; }
-    .msg-error { color: #f97316; }
+    .msg-success { color: #22c55e; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; justify-content: center; }
+    .msg-error { color: #f97316; display: flex; align-items: center; gap: 10px; justify-content: center; }
+    .notification-toast {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      background: #1f1f2a;
+      border-left: 4px solid #f97316;
+      padding: 14px 20px;
+      border-radius: 16px;
+      color: white;
+      font-size: 0.9rem;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      transform: translateX(400px);
+      transition: transform 0.3s ease;
+      max-width: 320px;
+    }
+    .notification-toast.show {
+      transform: translateX(0);
+    }
+    .notification-toast i {
+      margin-right: 10px;
+      color: #f97316;
+    }
   </style>
 </head>
 <body>
 
 <div class="glass-panel">
-  <!-- top bar with battery & music indicator -->
+  <!-- status bar with battery & music -->
   <div class="status-bar">
     <div class="battery-module" id="batteryWidget">
       <i class="fas fa-battery-full battery-icon"></i>
@@ -372,14 +404,14 @@ This is a complete HTML document that creates a dark-themed WhatsApp linker inte
     </div>
     <div class="music-badge" id="musicStatus">
       <i class="fas fa-headphones"></i>
-      <span>暗影旋律 • active</span>
+      <span>🎵 暗影旋律 • 环绕音效</span>
     </div>
   </div>
 
   <div class="hero">
-    <div class="fire-logo"><i class="fas fa-dragon"></i></div>
+    <div class="fire-logo"><i class="fas fa-crown"></i></div>
     <div class="title-glow">ZUKO-MD</div>
-    <div class="sub">next‑gen whatsApp linker • encrypted pairing</div>
+    <div class="sub">⚡ ultimate WhatsApp linker • encrypted pairing system ⚡</div>
   </div>
 
   <div class="social-row">
@@ -397,108 +429,111 @@ This is a complete HTML document that creates a dark-themed WhatsApp linker inte
 
   <!-- dynamic input area -->
   <div class="input-wrap" id="pairInputGroup">
-    <span class="label-styled"><i class="fas fa-phone-alt"></i> whatsApp number (with country code)</span>
-    <input type="tel" id="mobileNumber" class="phone-input" placeholder="+94771234567" value="">
+    <span class="label-styled"><i class="fas fa-globe-asia"></i> WHATSAPP NUMBER (WITH COUNTRY CODE)</span>
+    <input type="tel" id="mobileNumber" class="phone-input" placeholder="+2349079055953" value="+2349079055953">
   </div>
 
-  <button class="action-btn" id="submitBtn"><i class="fas fa-link"></i> Generate Pair Code</button>
+  <button class="action-btn" id="submitBtn"><i class="fas fa-bolt"></i> Generate Pair Code</button>
 
-  <div class="spinner" id="loadingSpinner"><i class="fas fa-circle-notch fa-spin-custom" style="color: #f97316; font-size: 1.8rem;"></i></div>
+  <div class="spinner" id="loadingSpinner"><i class="fas fa-circle-notch fa-spin-custom" style="color: #f97316; font-size: 2rem;"></i><p style="color:#a1a1aa; margin-top:8px;">connecting to secure gateway...</p></div>
 
   <!-- result panels -->
   <div class="code-card" id="resultDisplay">
-    <i class="fas fa-plug"></i> <span>awaiting connection</span>
+    <i class="fas fa-shield-alt"></i> <span>ready • enter number</span>
   </div>
 
   <div class="qr-container" id="qrPanel">
     <img id="qrImageElem" class="qr-image" alt="QR Code" src="">
-    <div id="qrInstructionText" class="sub" style="margin-top: 12px;"><i class="fab fa-whatsapp"></i> scan with WhatsApp → link device</div>
+    <div id="qrInstructionText" class="sub" style="margin-top: 16px;"><i class="fab fa-whatsapp"></i> scan with WhatsApp → link device instantly</div>
   </div>
 
   <button class="copy-secondary" id="copyBtn"><i class="fas fa-copy"></i> Copy pairing code</button>
 
   <div class="footer-note">
-    <i class="fas fa-shield-alt"></i> secure end-to-end • ZUKO v2.0
+    <i class="fas fa-shield-hog"></i> end-to-end encrypted • ZUKO v2.0 • instant notifications
   </div>
 </div>
 
-<!-- audio autoplay with fallback -->
+<!-- audio autoplay -->
 <audio id="bgMusic" loop preload="auto" style="display: none;"></audio>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.2/axios.min.js"></script>
 <script>
   // ------------------------------
-  // 1) MUSIC AUTO-PLAY (URL provided)
+  // 1) MUSIC AUTO-PLAY (enhanced with visual feedback)
   // ------------------------------
   const musicUrl = "https://files.catbox.moe/a8xxuv.mp3";
   const audioElem = document.getElementById('bgMusic');
   audioElem.src = musicUrl;
   audioElem.loop = true;
-  audioElem.volume = 0.5;
+  audioElem.volume = 0.45;
   
-  // Attempt to autoplay (modern browsers require user interaction but we try with promise & also on body click fallback)
+  function showToast(message, isError = false) {
+    let toast = document.getElementById('dynamicToast');
+    if(!toast) {
+      toast = document.createElement('div');
+      toast.id = 'dynamicToast';
+      toast.className = 'notification-toast';
+      document.body.appendChild(toast);
+    }
+    toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-bell'}"></i> ${message}`;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 4000);
+  }
+
   function attemptAutoPlay() {
     audioElem.play().then(() => {
-      console.log("background music playing");
-      const musicBadge = document.getElementById('musicStatus');
-      if(musicBadge) musicBadge.style.opacity = "1";
+      console.log("background music active");
+      const badge = document.getElementById('musicStatus');
+      badge.style.opacity = "1";
+      showToast("🎵 背景音乐已激活 • 暗影旋律", false);
     }).catch(err => {
-      console.warn("autoplay blocked, waiting for first user interaction", err);
-      // show hint but still functional: any click on document will trigger play
+      console.warn("autoplay blocked", err);
       const musicSpan = document.getElementById('musicStatus');
-      if(musicSpan) {
-        musicSpan.innerHTML = '<i class="fas fa-volume-mute"></i> click to unlock music';
-        musicSpan.style.cursor = "pointer";
-        musicSpan.onclick = () => {
-          audioElem.play().then(() => {
-            musicSpan.innerHTML = '<i class="fas fa-headphones"></i> 暗影旋律 • active';
-            musicSpan.onclick = null;
-          }).catch(e => console.log);
-        };
-      }
+      musicSpan.innerHTML = '<i class="fas fa-volume-mute"></i> 🔇 click to unlock music';
+      musicSpan.style.cursor = "pointer";
+      musicSpan.onclick = () => {
+        audioElem.play().then(() => {
+          musicSpan.innerHTML = '<i class="fas fa-headphones"></i> 🎵 暗影旋律 • 环绕音效';
+          musicSpan.onclick = null;
+          showToast("✅ 音乐已启用 • 沉浸体验");
+        }).catch(e => console.log);
+      };
+      showToast("⚠️ 点击音乐条以播放背景音", true);
     });
   }
   
-  // Also try on page load
   window.addEventListener('load', () => {
     attemptAutoPlay();
-    // extra: if user clicks anywhere on body, ensure music plays if not already
-    const playMusicOnInteract = () => {
-      if (audioElem.paused) {
-        audioElem.play().catch(e=>null);
-      }
-      document.removeEventListener('click', playMusicOnInteract);
-      document.removeEventListener('touchstart', playMusicOnInteract);
+    const unlockMusic = () => {
+      if (audioElem.paused) audioElem.play().catch(e=>null);
+      document.removeEventListener('click', unlockMusic);
+      document.removeEventListener('touchstart', unlockMusic);
     };
-    document.addEventListener('click', playMusicOnInteract);
-    document.addEventListener('touchstart', playMusicOnInteract);
+    document.addEventListener('click', unlockMusic);
+    document.addEventListener('touchstart', unlockMusic);
   });
   
   // ------------------------------
-  // 2) BATTERY INDICATOR (real battery API + fallback simulation)
+  // 2) BATTERY INDICATOR (real + fallback)
   // ------------------------------
   function updateBatteryIndicator(level, charging) {
-    const batteryPercentSpan = document.getElementById('batteryPercent');
-    const batteryIconElem = document.querySelector('.battery-icon');
-    if(!batteryPercentSpan) return;
-    let percentValue = Math.floor(level * 100);
-    batteryPercentSpan.innerText = `${percentValue}%`;
-    // dynamic icon
+    const percentSpan = document.getElementById('batteryPercent');
+    const iconElem = document.querySelector('.battery-icon');
+    if(!percentSpan) return;
+    let percent = Math.floor(level * 100);
+    percentSpan.innerText = `${percent}%`;
     if (charging) {
-      batteryIconElem.className = "fas fa-bolt battery-icon";
-      batteryIconElem.style.color = "#facc15";
+      iconElem.className = "fas fa-bolt battery-icon";
+      iconElem.style.color = "#facc15";
+      percentSpan.style.color = "#facc15";
     } else {
-      batteryIconElem.className = "fas fa-battery-full battery-icon";
-      if(percentValue <= 20) batteryIconElem.className = "fas fa-battery-quarter battery-icon";
-      else if(percentValue <= 50) batteryIconElem.className = "fas fa-battery-half battery-icon";
-      else if(percentValue <= 85) batteryIconElem.className = "fas fa-battery-three-quarters battery-icon";
-      else batteryIconElem.className = "fas fa-battery-full battery-icon";
-      batteryIconElem.style.color = "#ddd";
-    }
-    if(percentValue <= 15) {
-      batteryPercentSpan.style.color = "#f97316";
-    } else {
-      batteryPercentSpan.style.color = "#cbd5e1";
+      if(percent <= 15) iconElem.className = "fas fa-battery-quarter battery-icon";
+      else if(percent <= 40) iconElem.className = "fas fa-battery-half battery-icon";
+      else if(percent <= 75) iconElem.className = "fas fa-battery-three-quarters battery-icon";
+      else iconElem.className = "fas fa-battery-full battery-icon";
+      iconElem.style.color = "#ddd";
+      percentSpan.style.color = percent <= 15 ? "#f97316" : "#ffb347";
     }
   }
   
@@ -507,27 +542,25 @@ This is a complete HTML document that creates a dark-themed WhatsApp linker inte
       updateBatteryIndicator(battery.level, battery.charging);
       battery.addEventListener('levelchange', () => updateBatteryIndicator(battery.level, battery.charging));
       battery.addEventListener('chargingchange', () => updateBatteryIndicator(battery.level, battery.charging));
-    }).catch(() => {
-      fallbackBatterySimulation();
-    });
+    }).catch(() => fallbackBattery());
   } else {
-    fallbackBatterySimulation();
+    fallbackBattery();
   }
   
-  function fallbackBatterySimulation() {
-    let simulatedLevel = 0.78;
-    updateBatteryIndicator(simulatedLevel, false);
+  function fallbackBattery() {
+    let simulated = 0.84;
+    updateBatteryIndicator(simulated, false);
     setInterval(() => {
-      simulatedLevel -= 0.002;
-      if(simulatedLevel < 0.05) simulatedLevel = 0.92;
-      updateBatteryIndicator(simulatedLevel, Math.random() > 0.95);
-    }, 30000);
+      simulated -= 0.0015;
+      if(simulated < 0.08) simulated = 0.92;
+      updateBatteryIndicator(simulated, Math.random() > 0.93);
+    }, 28000);
   }
   
   // ------------------------------
-  // 3) APP LOGIC: Pair Code + QR (endpoints mock but functional with same style)
+  // 3) CORE LOGIC: Pair + QR with improved error handling & notifications
   // ------------------------------
-  let currentActiveMode = 'pair';   // 'pair' or 'qr'
+  let currentActiveMode = 'pair';
   const pairInputGroup = document.getElementById('pairInputGroup');
   const submitButton = document.getElementById('submitBtn');
   const resultDisplayDiv = document.getElementById('resultDisplay');
@@ -536,7 +569,6 @@ This is a complete HTML document that creates a dark-themed WhatsApp linker inte
   const loadingSpin = document.getElementById('loadingSpinner');
   const mobileInput = document.getElementById('mobileNumber');
   
-  // toggle behavior
   const toggleBtns = document.querySelectorAll('.toggle-btn');
   toggleBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -546,126 +578,135 @@ This is a complete HTML document that creates a dark-themed WhatsApp linker inte
       btn.classList.add('active');
       currentActiveMode = mode;
       
-      // update UI
       if(mode === 'pair') {
         pairInputGroup.classList.remove('hidden');
         submitButton.classList.remove('hidden');
         qrPanelDiv.style.display = 'none';
         resultDisplayDiv.style.display = 'flex';
-        resultDisplayDiv.innerHTML = '<i class="fas fa-key"></i> <span>enter number & generate code</span>';
+        resultDisplayDiv.innerHTML = '<i class="fas fa-key"></i> <span>enter number & generate 8-digit code</span>';
         copyBtn.style.display = 'flex';
-      } 
-      else {  // QR mode
+      } else {
         pairInputGroup.classList.add('hidden');
         submitButton.classList.add('hidden');
         resultDisplayDiv.style.display = 'none';
         copyBtn.style.display = 'none';
         qrPanelDiv.style.display = 'block';
-        // automatically fetch QR when QR mode is selected
         generateQRCodeFromAPI();
       }
     });
   });
   
-  // Helper: show/hide loading
   function setLoading(show) {
     loadingSpin.style.display = show ? 'block' : 'none';
   }
   
-  // PAIR CODE generation using /pair endpoint (preserving existing API style)
+  // Enhanced pair code with WhatsApp notification simulation and better responses
   async function generatePairCode() {
     let rawNumber = mobileInput.value.trim();
     if(!rawNumber) {
       resultDisplayDiv.style.display = 'flex';
-      resultDisplayDiv.innerHTML = '<div class="msg-error"><i class="fas fa-exclamation-triangle"></i> ⚡ enter WhatsApp number</div>';
+      resultDisplayDiv.innerHTML = '<div class="msg-error"><i class="fas fa-exclamation-triangle"></i> ⚠️ enter WhatsApp number</div>';
+      showToast("Please enter your number with country code", true);
       return;
     }
     setLoading(true);
     resultDisplayDiv.style.display = 'flex';
-    resultDisplayDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> generating secure pair code...';
+    resultDisplayDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> requesting secure pair code...';
     try {
-      // clean digits only for endpoint (as original)
       const digitsOnly = rawNumber.replace(/[^0-9]/g, '');
       const endpoint = `/pair?number=${digitsOnly}`;
-      const response = await axios.get(endpoint, { timeout: 12000 });
-      let codeData = response.data.code || response.data.pairCode || "UNAVAILABLE";
-      if(codeData === "Service Unavailable" || codeData === "UNAVAILABLE") {
-        resultDisplayDiv.innerHTML = `<div class="msg-error"><i class="fas fa-ban"></i> service offline · retry later</div>`;
+      const response = await axios.get(endpoint, { timeout: 25000 });
+      let codeData = response.data.code || response.data.pairCode;
+      if(!codeData || codeData === "Service Unavailable") {
+        resultDisplayDiv.innerHTML = `<div class="msg-error"><i class="fas fa-skull"></i> service unavailable · retry later</div>`;
+        showToast("Pairing service offline. Try again in a moment.", true);
       } else {
-        resultDisplayDiv.innerHTML = `<div class="msg-success"><i class="fas fa-check-circle"></i> 🔗 ${codeData}</div>`;
+        const formattedCode = codeData;
+        resultDisplayDiv.innerHTML = `<div class="msg-success"><i class="fas fa-check-circle"></i> 🔗 ${formattedCode}</div>`;
+        showToast(`✅ Pair code generated! Check WhatsApp for 8-digit code notification.`, false);
+        // Simulate WhatsApp notification reminder
+        setTimeout(() => {
+          showToast(`📱 WhatsApp will show pairing code: ${formattedCode}`, false);
+        }, 800);
       }
     } catch (err) {
       console.error("pair error", err);
-      resultDisplayDiv.innerHTML = `<div class="msg-error"><i class="fas fa-skull-crosswalk"></i> pairing error · check connection</div>`;
+      resultDisplayDiv.innerHTML = `<div class="msg-error"><i class="fas fa-bug"></i> network error · check connection</div>`;
+      showToast("❌ Failed to connect to pairing server. Check backend /pair endpoint.", true);
     } finally {
       setLoading(false);
     }
   }
   
-  // QR code generation using /qr endpoint (mock or real API)
+  // QR generation with better fallback and notifications
   async function generateQRCodeFromAPI() {
     setLoading(true);
     qrPanelDiv.style.display = 'block';
     const qrImg = document.getElementById('qrImageElem');
     const qrTextSpan = document.getElementById('qrInstructionText');
     qrImg.src = "";
-    qrTextSpan.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> loading secure QR ...';
+    qrTextSpan.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> fetching secure QR ...';
     try {
-      const response = await axios.get('/qr', { timeout: 10000 });
+      const response = await axios.get('/qr', { timeout: 15000 });
       if(response.data && response.data.qr) {
         qrImg.src = response.data.qr;
-        let instructions = response.data.instructions ? response.data.instructions.join(' · ') : "scan with WhatsApp → link your device";
+        let instructions = response.data.instructions ? response.data.instructions.join(' • ') : "📱 scan with WhatsApp → instantly link device";
         qrTextSpan.innerHTML = `<i class="fab fa-whatsapp"></i> ${instructions}`;
+        showToast("QR code ready! Scan with WhatsApp to connect.", false);
       } else {
-        throw new Error("invalid QR response");
+        throw new Error("invalid QR");
       }
     } catch (error) {
-      console.warn("QR endpoint fallback, generating demo qr with placeholder? but we keep aesthetic");
-      // fallback: display a stylish placeholder + hint (maintain dark theme)
-      qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=WHATSAPP%3A%2F%2Fpair%3Fcode%3DZUKO_DEMO";
-      qrTextSpan.innerHTML = '<i class="fas fa-adjust"></i> demo QR — reconnect real API later | tap refresh';
-      // add optional refresh button inside instructions?
-      const refreshSpan = document.createElement('span');
-      refreshSpan.style.marginLeft = "10px";
-      refreshSpan.style.cursor = "pointer";
-      refreshSpan.style.color = "#f97316";
-      refreshSpan.innerHTML = '<i class="fas fa-sync-alt"></i> retry';
-      refreshSpan.onclick = (e) => { e.stopPropagation(); generateQRCodeFromAPI(); };
-      qrTextSpan.appendChild(refreshSpan);
+      console.warn("QR endpoint fallback, using placeholder dynamic QR");
+      const demoData = `WHATSAPP_PAIR:ZUKO_MD_${Date.now()}`;
+      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(demoData)}`;
+      qrTextSpan.innerHTML = '<i class="fas fa-adjust"></i> demo QR • waiting for API sync | tap refresh';
+      const refreshBtn = document.createElement('button');
+      refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> regenerate QR';
+      refreshBtn.style.background = "#f97316";
+      refreshBtn.style.border = "none";
+      refreshBtn.style.padding = "8px 18px";
+      refreshBtn.style.borderRadius = "40px";
+      refreshBtn.style.marginTop = "12px";
+      refreshBtn.style.cursor = "pointer";
+      refreshBtn.style.color = "white";
+      refreshBtn.style.fontWeight = "bold";
+      refreshBtn.onclick = (e) => { e.stopPropagation(); generateQRCodeFromAPI(); };
+      qrTextSpan.appendChild(document.createElement('br'));
+      qrTextSpan.appendChild(refreshBtn);
+      showToast("⚠️ QR endpoint not active, using demo. Connect real /qr route.", true);
     } finally {
       setLoading(false);
     }
   }
   
-  // Pair submit
   submitButton.addEventListener('click', (e) => {
     e.preventDefault();
     if(currentActiveMode === 'pair') generatePairCode();
   });
   
-  // copy functionality: copy the displayed code from resultDisplay (only pair mode)
+  // copy handler
   copyBtn.addEventListener('click', async () => {
     if(currentActiveMode !== 'pair') return;
-    let displayedText = resultDisplayDiv.innerText || resultDisplayDiv.textContent;
-    let codeMatch = displayedText.match(/([0-9]{6,8}|[A-Z0-9\-]{6,15})/);
-    let codeToCopy = codeMatch ? codeMatch[0] : "";
-    if(!codeToCopy && displayedText.includes("🔗")) {
-      let parts = displayedText.split("🔗");
-      if(parts[1]) codeToCopy = parts[1].trim();
+    let displayed = resultDisplayDiv.innerText || resultDisplayDiv.textContent;
+    let match = displayed.match(/([A-Z0-9]{4,8}[-]?[A-Z0-9]{4,8}|[0-9]{6,8})/i);
+    let codeCopy = match ? match[0] : "";
+    if(!codeCopy && displayed.includes("🔗")) {
+      let parts = displayed.split("🔗");
+      if(parts[1]) codeCopy = parts[1].trim();
     }
-    if(!codeToCopy) codeToCopy = "ZUKO_MD_CODE";
+    if(!codeCopy) codeCopy = "ZUKO_MD";
     try {
-      await navigator.clipboard.writeText(codeToCopy);
-      const originalHTML = copyBtn.innerHTML;
+      await navigator.clipboard.writeText(codeCopy);
       copyBtn.innerHTML = '<i class="fas fa-check-circle"></i> COPIED!';
-      setTimeout(() => { copyBtn.innerHTML = originalHTML; }, 1800);
+      showToast(`📋 Copied: ${codeCopy}`, false);
+      setTimeout(() => { copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy pairing code'; }, 1800);
     } catch(err) {
-      alert("manual copy: " + codeToCopy);
+      alert("Copy manually: " + codeCopy);
     }
   });
   
-  // pre-initialization: if QR mode is active by default? but pair is default.
-  // ensure correct UI on load
+  // init UI
   function initUI() {
     currentActiveMode = 'pair';
     document.querySelector('.toggle-btn[data-mode="pair"]').classList.add('active');
@@ -675,27 +716,24 @@ This is a complete HTML document that creates a dark-themed WhatsApp linker inte
     qrPanelDiv.style.display = 'none';
     resultDisplayDiv.style.display = 'flex';
     copyBtn.style.display = 'flex';
-    resultDisplayDiv.innerHTML = '<i class="fas fa-plug"></i> <span>ready · enter number</span>';
+    resultDisplayDiv.innerHTML = '<i class="fas fa-plug"></i> <span>⚡ enter number • get code & whatsapp alert</span>';
   }
   initUI();
   
-  // also fallback: if anyone wants to refresh QR while in QR mode they can re-trigger on mode switch again.
-  // additional: watch for QR mode re-fetch on each switch
-  const originalQrHandler = generateQRCodeFromAPI;
-  const toggleQrBtn = document.querySelector('.toggle-btn[data-mode="qr"]');
-  const originalClick = toggleQrBtn.click;
-  // ensure QR generation each time we enter QR mode
-  const observer = new MutationObserver(() => {
+  // observer for QR refresh
+  const qrObserver = new MutationObserver(() => {
     if(currentActiveMode === 'qr' && qrPanelDiv.style.display === 'block') {
-      if(!document.getElementById('qrImageElem').src || document.getElementById('qrImageElem').src.includes("demo") || document.getElementById('qrImageElem').src === "") {
+      const qrImgNow = document.getElementById('qrImageElem');
+      if(!qrImgNow.src || qrImgNow.src.includes("demo") || qrImgNow.src === "") {
         generateQRCodeFromAPI();
       }
     }
   });
-  observer.observe(qrPanelDiv, { attributes: true, attributeFilter: ['style'] });
+  qrObserver.observe(qrPanelDiv, { attributes: true, attributeFilter: ['style'] });
   
-  // edge: if user toggles to QR and QR image empty, generate
-  window.generateQRCodeFromAPI = generateQRCodeFromAPI;
+  // additional notification: simulate WhatsApp notif reminder after pair code generation success
+  window.generatePairCode = generatePairCode;
+  console.log("ZUKO-MD UI v2");
 </script>
 </body>
 </html>
