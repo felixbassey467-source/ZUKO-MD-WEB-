@@ -2,11 +2,11 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import cors from 'cors';
 
 // Importing the modules
 import pairRouter from './pair.js';
 import qrRouter from './qr.js';
-import QRCode from 'qrcode';
 
 const app = express();
 
@@ -16,11 +16,13 @@ const __dirname = path.dirname(__filename);
 
 const PORT = process.env.PORT || 8000;
 
+// Increase max listeners limit
 import('events').then(events => {
     events.EventEmitter.defaultMaxListeners = 500;
 });
 
 // Middleware
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
@@ -34,7 +36,15 @@ app.use('/pair', pairRouter);
 app.use('/qr', qrRouter);
 
 app.listen(PORT, () => {
-    console.log(`YoutTube: @mr_unique_hacker\n\nGitHub: @mruniquehacker\n\nServer running on http://localhost:${PORT}`);
+    console.log(`╔════════════════════════════════════════╗`);
+    console.log(`║   🤖 Knight Bot - WhatsApp Linker     ║`);
+    console.log(`╠════════════════════════════════════════╣`);
+    console.log(`║ YouTube: @mr_unique_hacker            ║`);
+    console.log(`║ GitHub: @mruniquehacker               ║`);
+    console.log(`║                                        ║`);
+    console.log(`║ Server running on:                     ║`);
+    console.log(`║ http://localhost:${PORT}                 ║`);
+    console.log(`╚════════════════════════════════════════╝`);
 });
 
 export default app;
